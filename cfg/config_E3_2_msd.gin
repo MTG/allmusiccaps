@@ -1,0 +1,23 @@
+# E3.2: CLAP trained exclusively on MSD data
+# Based on config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin
+# with MSD data only instead of concat datamodule
+#
+# Key changes from baseline:
+# - Training data: MSD only (no DiscoTube, Freesound, or PSE)
+# - Same audio encoder: OMARRQ
+# - Same text encoder: all-mpnet-base-v2
+
+include "cfg/config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin"
+
+# Override datamodule to use MSD only
+train.datamodule = @msd_text_audio
+
+# Update wandb experiment name
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "data_experiments",
+    "name": "E3_2_msd",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

@@ -1,0 +1,16 @@
+# E9.6: LeJEPA with lambda=0 (no SigReg regularization loss).
+# Same as E8.2 but with lambd=0.0, so only invariance (cosine) loss is used.
+# Goal: test if SigReg is necessary or if invariance loss alone is sufficient.
+
+include "cfg/config_E8_2_lejepa.gin"
+
+LeJEPA.lambd = 0.0
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "understanding_experiments",
+    "name": "E9_6_lejepa_no_sigreg",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

@@ -1,0 +1,54 @@
+# Local debug configuration for CLAP training
+# Runs on CPU with dummy data, no external files required
+
+# Wandb settings - offline mode for local debugging
+train.wandb_params = {
+    "project": "text-audio",
+    "name": "debug.local",
+    "offline": True,
+    "save_dir": "./debug_logs/",
+}
+
+# Lightning trainer parameters - minimal CPU configuration
+train.params = {
+    "accelerator": "cpu",
+    "devices": 1,
+    "max_steps": 10,
+    "log_every_n_steps": 1,
+    "precision": "32-true",
+}
+
+# Use dummy datamodule (no external files needed)
+train.datamodule = @dummy_text_audio
+
+# Module configuration
+def_module.module = @clap
+
+# CLAP model settings
+CLAP.audio_encoder = @OMARRQ
+CLAP.text_encoder = @AllMPNetBaseV2
+CLAP.proj_size = 512
+CLAP.temp = 0.1
+CLAP.lr = 1e-4
+CLAP.weight_decay = 1e-2
+CLAP.seed = 42
+CLAP.train_audio_encoder = False  # Frozen for faster debugging
+CLAP.train_text_encoder = False   # Frozen for faster debugging
+CLAP.aggregation_type = "mean"    # Works with 10s audio
+
+# Encoder settings
+OMARRQ.model_id = "mtg-upf/clap_omarrq_mp_small_music"
+AllMPNetBaseV2.model_id = "sentence-transformers/all-mpnet-base-v2"
+
+# Cosine annealing scheduler - short warmup for debug runs
+CosineAnnealingCallback.warmup_steps = 2
+CosineAnnealingCallback.eta_min = 1e-7
+
+# Dummy datamodule parameters
+DummyTextAudioDataModule.batch_size = 4
+DummyTextAudioDataModule.num_workers = 0
+DummyTextAudioDataModule.num_train_samples = 100
+DummyTextAudioDataModule.num_val_samples = 20
+DummyTextAudioDataModule.num_frames = 240000  # 10s at 24kHz
+DummyTextAudioDataModule.sample_rate = 24000
+DummyTextAudioDataModule.half_precision = False  # Use float32 for CPU

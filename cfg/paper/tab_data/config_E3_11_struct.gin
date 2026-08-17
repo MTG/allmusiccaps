@@ -1,0 +1,39 @@
+# E3.11: CLAP trained on struct only (DT v2, LLM-structured descriptions)
+# New data naming convention:
+#   struct = DT v2 (Discotube v2, LLM-structured descriptions)
+#
+# No audio_type_token. No sigreg regularization.
+# Logs layerwise geometric metrics and information imbalance.
+#
+# Dataset sizes: struct = 222405 (same DT v1 filelists as E3.10)
+
+include "cfg/config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin"
+
+train.datamodule = @DiscotubeStructuredTextAudioDataModule
+
+# Discotube v2 (struct) datamodule settings
+DiscotubeStructuredTextAudioDataModule.batch_size = %batch_size
+DiscotubeStructuredTextAudioDataModule.num_workers = 20
+DiscotubeStructuredTextAudioDataModule.data_dir = "/scratch/<group>/mmaps_discotube/"
+DiscotubeStructuredTextAudioDataModule.filelist_train = "/scratch/<group>/discotube/metadata/mmap_ids_train_rel"
+DiscotubeStructuredTextAudioDataModule.filelist_val = "/scratch/<group>/discotube/metadata/mmap_ids_val_rel"
+DiscotubeStructuredTextAudioDataModule.text_file = "/scratch/<group>/discotube/metadata/llama33_promptv3_captions.jsonl"
+DiscotubeStructuredTextAudioDataModule.p = 0.2
+
+# DT v2 dataset settings
+DiscotubeStructuredTextAudioDataset.num_frames = 160000
+DiscotubeStructuredTextAudioDataset.folder_structure_type = "bsc"
+DiscotubeStructuredTextAudioDataset.use_audio_type_token = False
+
+# Layerwise geometric metrics and information imbalance
+train.layerwise_metrics = True
+train.info_imbalance = True
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "data_experiments",
+    "name": "E3_11_struct",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

@@ -1,0 +1,43 @@
+# E9.4: LeJEPA with original learning rate (5e-6) and 2 views per modality.
+# Extends E8.2 (LeJEPA baseline) with dual text + dual audio views.
+# Goal: test if multiview augmentation improves LeJEPA at the original LR.
+
+include "cfg/config_E8_2_lejepa.gin"
+
+batch_size = 64
+
+# Enable multiview
+LeJEPA.n_text_views = 2
+
+# Dual audio views for all datasets (different crops + waveform augmentation)
+DiscotubeTextAudioCleanDataModule.n_audio_views = 2
+DiscotubeTextAudioCleanDataModule.audio_noise_std = 0.005
+DiscotubeTextAudioCleanDataModule.audio_gain_range = (0.8, 1.2)
+MSDTextAudioDataModule.n_audio_views = 2
+MSDTextAudioDataModule.audio_noise_std = 0.005
+MSDTextAudioDataModule.audio_gain_range = (0.8, 1.2)
+M4RAGTextAudioDataModule.n_audio_views = 2
+M4RAGTextAudioDataModule.audio_noise_std = 0.005
+M4RAGTextAudioDataModule.audio_gain_range = (0.8, 1.2)
+FreesoundTextAudioDataModule.n_audio_views = 2
+FreesoundTextAudioDataModule.audio_noise_std = 0.005
+FreesoundTextAudioDataModule.audio_gain_range = (0.8, 1.2)
+PSETextAudioDataModule.n_audio_views = 2
+PSETextAudioDataModule.audio_noise_std = 0.005
+PSETextAudioDataModule.audio_gain_range = (0.8, 1.2)
+
+# Dual text views for all datasets
+DiscotubeTextAudioCleanDataModule.n_text_views = 2
+MSDTextAudioDataModule.n_text_views = 2
+M4RAGTextAudioDataModule.n_text_views = 2
+FreesoundTextAudioDataModule.n_text_views = 2
+PSETextAudioDataModule.n_text_views = 2
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "understanding_experiments",
+    "name": "E9_4_lejepa_multiview_2",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

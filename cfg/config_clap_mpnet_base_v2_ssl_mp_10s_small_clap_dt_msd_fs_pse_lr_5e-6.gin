@@ -1,0 +1,145 @@
+# Macros:
+# ==============================================================================
+batch_size = 384
+new_freq = 24000
+
+# Parameters fwith or AudioDataset:
+# ==============================================================================
+data.data_utils.AudioDataset.half_precision = True
+data.data_utils.AudioDataset.mono = True
+data.data_utils.AudioDataset.new_freq = 24000
+data.data_utils.AudioDataset.orig_freq = 16000
+
+
+# Parameters for build_module:
+# ==============================================================================
+build_module.ckpt_path = ''
+build_module.module = @modules.maskingmodel.MaskingModel
+build_module.net = @nets.conformer.Conformer
+build_module.representation = \
+    [@nets.melspectrogram.MelSpectrogram,
+     @nets.waveform.Waveform,
+     @nets.cqt.CQT,
+     @nets.encodec.EnCodec]
+
+def_module.module = @clap
+
+# Parameters for CLAP:
+# ==============================================================================
+CLAP.aggregation_type = 'mean'
+CLAP.audio_encoder = @OMARRQ
+CLAP.text_encoder = @AllMPNetBaseV2
+CLAP.lr = 5e-6
+CLAP.n_pool_att_heads = 8
+CLAP.proj_size = 512
+CLAP.seed = 0
+CLAP.temp = 0.1
+CLAP.tokenizers_parallelism = False
+CLAP.train_audio_encoder = True
+CLAP.train_text_encoder = False
+CLAP.weight_decay = 0.01
+CLAP.loss_type = "info_nce_multimodal"
+
+OMARRQ.model_id = "mtg-upf/clap_omarrq_mp_small_music"
+AllMPNetBaseV2.model_id = "sentence-transformers/all-mpnet-base-v2"
+AllMPNetBaseV2.local_files_only = True
+
+
+# Parameters for CosineAnnealingCallback:
+# ==============================================================================
+CosineAnnealingCallback.eta_min = 1e-07
+CosineAnnealingCallback.warmup_steps = 15000
+
+
+# Parameters for train:
+# ==============================================================================
+train.params = \
+    {'accelerator': 'gpu',
+     'num_nodes': 2,
+     'devices': 4,
+     'log_every_n_steps': 50,
+     'check_val_every_n_epoch': 4,
+     'max_steps': 150000,
+     'num_sanity_val_steps': 1,
+     'precision': 'bf16-mixed',
+     'strategy': 'ddp_find_unused_parameters_true'}
+
+train.wandb_params = \
+    {'entity': '<anon-entity>',
+     'group': 'vanilla_clap',
+     'name': 'config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6',
+     'offline': True,
+     'project': 'text-audio',
+     'save_dir': '/projects/<group>/logs/'}
+
+train.datamodule = @concat_text_audio
+train.hf_ckpt = None
+train.ckpt_save_every_n_epochs = 4
+
+
+# Parameters for DiscotubeTextAudioCleanDataModule:
+# ==============================================================================
+DiscotubeTextAudioCleanDataModule.batch_size = %batch_size
+DiscotubeTextAudioCleanDataModule.num_workers = 20
+DiscotubeTextAudioCleanDataModule.data_dir = "/scratch/<group>/mmaps_discotube/"
+DiscotubeTextAudioCleanDataModule.filelist_train = "/scratch/<group>/discotube/metadata/mmap_ids_train_rel"
+DiscotubeTextAudioCleanDataModule.filelist_val = "/scratch/<group>/discotube/metadata/mmap_ids_val_rel"
+DiscotubeTextAudioCleanDataModule.text_file = "/scratch/<group>/discotube/metadata/Qwen_Qwen2.5-32B__chatgpt_v2__t0.5__1.1.jsonl"
+DiscotubeTextAudioCleanDataModule.max_sentences = 3
+DiscotubeTextAudioCleanDataset.use_audio_type_token = True
+DiscotubeTextAudioCleanDataset.audio_type_token_dropout = 0.2
+
+DiscotubeTextAudioCleanDataset.num_frames = 160000 # num frames @ original sr
+DiscotubeTextAudioCleanDataset.folder_structure_type = "bsc"
+
+# Parameters for MSDTextAudioDataModule:
+# ==============================================================================
+MSDTextAudioDataModule.batch_size = %batch_size
+MSDTextAudioDataModule.num_workers = 20
+MSDTextAudioDataModule.data_dir = "/scratch/<group>/mmaps_msd/mp3/"
+MSDTextAudioDataModule.filelist_train =  "/scratch/<group>/mmaps_msd/filelist_train_mmap.txt"
+MSDTextAudioDataModule.filelist_val =  "/scratch/<group>/mmaps_msd/filelist_train_mmap.txt"
+MSDTextAudioDataModule.description_prob = 0.5
+MSDTextAudioDataset.use_audio_type_token = True
+MSDTextAudioDataset.audio_type_token_dropout = 0.2
+
+MSDTextAudioDataset.num_frames = 160000 # num frames @ original sr
+
+# Parameters for FreesoundTextAudioDataModule:
+# ==============================================================================
+FreesoundTextAudioDataModule.batch_size = %batch_size
+FreesoundTextAudioDataModule.num_workers = 20
+FreesoundTextAudioDataModule.data_dir = "/scratch/<group>/freesound/"
+FreesoundTextAudioDataModule.filelist_train =  "/scratch/<group>/mmaps_freesound/filelist_full_train_mmap.txt"
+FreesoundTextAudioDataModule.filelist_val =  "/scratch/<group>/mmaps_freesound/filelist_full_val_mmap.txt"
+FreesoundTextAudioDataModule.text_file = "/scratch/<group>/mmaps_freesound/freesound_metadata.jsonl"
+FreesoundTextAudioDataModule.description_prob = 0.2
+FreesoundTextAudioDataset.use_audio_type_token = True
+FreesoundTextAudioDataset.audio_type_token_dropout = 0.2
+
+FreesoundTextAudioDataset.num_frames = 160000 # num frames @ original sr
+
+# Parameters for PSETextAudioDataModule:
+# ==============================================================================
+PSETextAudioDataModule.batch_size = %batch_size
+PSETextAudioDataModule.num_workers = 20
+PSETextAudioDataModule.data_dir = "/scratch/<group>/mmaps_pse/"
+PSETextAudioDataModule.filelist_train =  "/scratch/<group>/mmaps_pse/filelist_train.txt"
+PSETextAudioDataModule.filelist_val =  "/scratch/<group>/mmaps_pse/filelist_val.txt"
+PSETextAudioDataset.use_audio_type_token = True
+PSETextAudioDataset.audio_type_token_dropout = 0.2
+
+PSETextAudioDataset.num_frames = 160000 # num frames @ original sr
+
+# Parameters for ConcatTextAudioDataModule:
+# ==============================================================================
+ConcatTextAudioDataModule.datamodules = [
+  @DiscotubeTextAudioCleanDataModule,
+  @MSDTextAudioDataModule,
+  @FreesoundTextAudioDataModule,
+  @PSETextAudioDataModule,
+]
+
+ConcatTextAudioDataModule.ratios = [0.33, 0.45, 0.16, 0.06]
+ConcatTextAudioDataModule.batch_size = %batch_size
+ConcatTextAudioDataModule.num_workers = 20

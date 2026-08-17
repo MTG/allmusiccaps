@@ -1,0 +1,33 @@
+# E9.1: Short CLAP training (50K steps) with frequent checkpoints and geom metrics.
+# Same model/data as E7.2 (all 12 OMARRQ layers, audio type tokens, music + sound + quotes).
+# Goal: understand downstream performance degradation over training.
+
+include "cfg/paper/tab_layers/config_E7_2_all_layers.gin"
+
+# Short training: 50K steps with 5K warmup
+train.params = {
+    "accelerator": "gpu",
+    "num_nodes": 2,
+    "devices": 4,
+    "log_every_n_steps": 50,
+    "val_check_interval": 5000,
+    "check_val_every_n_epoch": None,
+    "max_steps": 50000,
+    "num_sanity_val_steps": 1,
+    "precision": "bf16-mixed",
+    "strategy": "ddp_find_unused_parameters_true",
+}
+
+CosineAnnealingCallback.warmup_steps = 5000
+
+# Checkpoint and geom metrics every 5K steps
+train.save_every_n_train_steps = 5000
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "understanding_experiments",
+    "name": "E9_1_clap_short",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

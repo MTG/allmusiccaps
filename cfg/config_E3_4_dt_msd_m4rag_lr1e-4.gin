@@ -1,0 +1,20 @@
+# E3.4: CLAP trained on music-only data (Discotube v1 + MSD + M4-RAG) with higher LR
+# Based on E3.3 with LR = 1e-4 instead of 5e-6
+#
+# Key changes from E3.3:
+# - LR: 1e-4 (vs 5e-6 in baseline/E3.3)
+
+include "cfg/config_E3_3_dt_msd_m4rag.gin"
+
+# Override learning rate
+CLAP.lr = 1e-4
+
+# Update wandb experiment name
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "data_experiments",
+    "name": "E3_4_dt_msd_m4rag_lr1e-4",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

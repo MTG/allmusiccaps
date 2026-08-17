@@ -1,0 +1,43 @@
+# E9.5: LeJEPA with 4 views per modality at half batch size.
+# Same as E9.4 but batch_size=32 and 4 audio/text views instead of 2.
+# Goal: test if more views compensate for smaller batch size.
+
+include "cfg/config_E8_2_lejepa.gin"
+
+batch_size = 32
+
+# Enable multiview
+LeJEPA.n_text_views = 4
+
+# 4 audio views for all datasets (different crops + waveform augmentation)
+DiscotubeTextAudioCleanDataModule.n_audio_views = 4
+DiscotubeTextAudioCleanDataModule.audio_noise_std = 0.005
+DiscotubeTextAudioCleanDataModule.audio_gain_range = (0.8, 1.2)
+MSDTextAudioDataModule.n_audio_views = 4
+MSDTextAudioDataModule.audio_noise_std = 0.005
+MSDTextAudioDataModule.audio_gain_range = (0.8, 1.2)
+M4RAGTextAudioDataModule.n_audio_views = 4
+M4RAGTextAudioDataModule.audio_noise_std = 0.005
+M4RAGTextAudioDataModule.audio_gain_range = (0.8, 1.2)
+FreesoundTextAudioDataModule.n_audio_views = 4
+FreesoundTextAudioDataModule.audio_noise_std = 0.005
+FreesoundTextAudioDataModule.audio_gain_range = (0.8, 1.2)
+PSETextAudioDataModule.n_audio_views = 4
+PSETextAudioDataModule.audio_noise_std = 0.005
+PSETextAudioDataModule.audio_gain_range = (0.8, 1.2)
+
+# 4 text views for all datasets
+DiscotubeTextAudioCleanDataModule.n_text_views = 4
+MSDTextAudioDataModule.n_text_views = 4
+M4RAGTextAudioDataModule.n_text_views = 4
+FreesoundTextAudioDataModule.n_text_views = 4
+PSETextAudioDataModule.n_text_views = 4
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "understanding_experiments",
+    "name": "E9_5_lejepa_multiview_4",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

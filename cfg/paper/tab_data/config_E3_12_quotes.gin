@@ -1,0 +1,28 @@
+# E3.12: CLAP trained on quotes only (DT v1, sentence-level text)
+# New data naming convention:
+#   quotes = DT v1 (Discotube v1, sentence-level text)
+#
+# No audio_type_token. No sigreg regularization.
+# Logs layerwise geometric metrics and information imbalance.
+#
+# Dataset sizes: quotes = 222405 (same DT v1 filelists as E3.9)
+
+include "cfg/config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin"
+
+train.datamodule = @DiscotubeTextAudioCleanDataModule
+
+# Discotube v1 (quotes) — filelist already set correctly in baseline
+DiscotubeTextAudioCleanDataset.use_audio_type_token = False
+
+# Layerwise geometric metrics and information imbalance
+train.layerwise_metrics = True
+train.info_imbalance = True
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "data_experiments",
+    "name": "E3_12_quotes",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

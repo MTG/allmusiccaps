@@ -1,0 +1,84 @@
+# E8.3: LpJEPA with both towers trainable.
+# Same data and encoder configuration as E8.2 (all 12 OMARRQ layers, audio type tokens,
+# music + sound + quotes, batch size 128).
+# Replaces LeJEPA SigReg with Sliced 2-Wasserstein against Rectified Generalized Gaussian.
+
+include "cfg/config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin"
+
+def_module.module = @lpjepa
+
+# Average all 12 layers of the encoder
+OMARRQ.layers = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+
+# Reduced batch size to fit trainable text encoder in memory
+batch_size = 128
+
+# LpJEPA model settings (mirrors E8.2 where applicable)
+LpJEPA.audio_encoder = @OMARRQ
+LpJEPA.text_encoder = @AllMPNetBaseV2
+LpJEPA.proj_size = 512
+LpJEPA.lr = 5e-6
+LpJEPA.weight_decay = 0.01
+LpJEPA.seed = 0
+LpJEPA.train_audio_encoder = True
+LpJEPA.train_text_encoder = True
+LpJEPA.aggregation_type = "mean"
+LpJEPA.lambd = 0.05
+LpJEPA.mu = 0.0
+# p_norm 0 seems better according to the paper results
+LpJEPA.p_norm = 2.0
+LpJEPA.n_slices = 8192
+LpJEPA.target_distribution = "rectified_lp_distribution"
+LpJEPA.sw_mode = "independent"
+LpJEPA.inv_loss = "cosine"
+
+
+train.datamodule = @concat_text_audio
+
+# Discotube v1 (quotes) — use v1 filelist (override baseline which points to v2)
+DiscotubeTextAudioCleanDataModule.filelist_train = "/scratch/<group>/discotube/metadata/mmap_ids_train_rel"
+DiscotubeTextAudioCleanDataModule.filelist_val = "/scratch/<group>/discotube/metadata/mmap_ids_val_rel"
+
+# M4-RAG (r4) datamodule settings
+M4RAGTextAudioDataModule.batch_size = %batch_size
+M4RAGTextAudioDataModule.data_dir = "/scratch/<group>/mmaps_discotube/"
+M4RAGTextAudioDataModule.filelist_train = "/scratch/<group>/discotube/metadata/m4rag_splits/filelist_train.txt"
+M4RAGTextAudioDataModule.filelist_val = "/scratch/<group>/discotube/metadata/m4rag_splits/filelist_val.txt"
+M4RAGTextAudioDataModule.metadata_file = "/scratch/<group>/discotube/metadata/m4rag_splits/m4rag_metadata.jsonl"
+M4RAGTextAudioDataModule.num_workers = 20
+M4RAGTextAudioDataModule.text_fields = ["description", "background", "analysis", "scene"]
+
+# Audio type tokens enabled
+DiscotubeTextAudioCleanDataset.use_audio_type_token = True
+MSDTextAudioDataset.use_audio_type_token = True
+M4RAGTextAudioDataset.use_audio_type_token = True
+M4RAGTextAudioDataset.num_frames = 160000
+FreesoundTextAudioDataset.use_audio_type_token = True
+PSETextAudioDataset.use_audio_type_token = True
+
+# ConcatTextAudioDataModule: MSD + r4 + FS + PSE + DT v1
+ConcatTextAudioDataModule.datamodules = [
+  @MSDTextAudioDataModule,
+  @M4RAGTextAudioDataModule,
+  @FreesoundTextAudioDataModule,
+  @PSETextAudioDataModule,
+  @DiscotubeTextAudioCleanDataModule,
+]
+
+# 40% music (MSD + r4), 20% sound (FS + PSE), 40% quotes (DT v1)
+# balanced by dataset size within groups
+# MSD=403803, r4=243084, FS=286083, PSE=709536, DT v1=222405
+ConcatTextAudioDataModule.ratios = [0.15, 0.25, 0.14, 0.06, 0.40]
+
+# Layerwise geometric metrics and information imbalance
+train.layerwise_metrics = True
+train.info_imbalance = True
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "layer_experiments",
+    "name": "E8_3_lpjepa",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

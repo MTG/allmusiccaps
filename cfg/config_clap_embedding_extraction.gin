@@ -1,0 +1,23 @@
+
+# Parameters for CLAP:
+# ==============================================================================
+extract_embeddings.model = @OMARRQ
+extract_embeddings.layers = [1,3,5,7,9,11,13,15,17,19,21,23]  # Specify layers for embedding
+extract_embeddings.out_dir = "/mnt/projects/mtg_text_audio/audio_embs/clap_omarrq_mp_large_music/discotube_5s/"
+
+# Path for saving extracted embeddings:
+OMARRQ.model_id = "mtg-upf/clap_omarrq_mp_large_music"
+
+# Parameters for AudioEmbeddingDataModule:
+# ==============================================================================
+AudioEmbeddingDataModule.batch_size = 1  # Increased for GPU parallelism
+AudioEmbeddingDataModule.data_dir = "/mnt/projects/discotube/youtube-downloads/"
+AudioEmbeddingDataModule.filelist_path = ""
+AudioEmbeddingDataModule.orig_freq = 44100
+AudioEmbeddingDataModule.new_freq = 24000
+AudioEmbeddingDataModule.num_frames = 22050
+AudioEmbeddingDataModule.num_workers = 16  # Optimized for parallelism
+AudioEmbeddingDataModule.pin_memory = True
+AudioEmbeddingDataModule.max_audio_len = 300.0  # in seconds
+AudioEmbeddingDataModule.segment_len = 5.0  # in seconds
+

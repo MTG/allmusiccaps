@@ -1,0 +1,40 @@
+# E9.3: LeJEPA with 10x higher LR than E9.2, gradient clipping, and more warmup.
+# Same model/data as E8.2 (LeJEPA, all 12 OMARRQ layers, audio type tokens,
+# music + sound + quotes, batch size 128).
+#
+# E9.2 (lr=5e-5, wd=5e-2) exploded after ~30K steps.
+# This experiment: lr=5e-4, wd=5e-2, gradient_clip_val=1.0, warmup_steps=30000.
+# Gradient clipping should prevent loss explosion at high LR.
+# Longer warmup (30K vs 15K) gives the model more time to stabilize before
+# full learning rate.
+
+include "cfg/config_E8_2_lejepa.gin"
+
+LeJEPA.lr = 5e-4
+LeJEPA.weight_decay = 5e-2
+LeJEPA.lambd = 0.02
+
+# Gradient clipping via Lightning Trainer
+train.params = \
+    {'accelerator': 'gpu',
+     'num_nodes': 2,
+     'devices': 4,
+     'log_every_n_steps': 50,
+     'check_val_every_n_epoch': 4,
+     'max_steps': 150000,
+     'num_sanity_val_steps': 1,
+     'precision': 'bf16-mixed',
+     'strategy': 'ddp_find_unused_parameters_true',
+     'gradient_clip_val': 1.0}
+
+# Double warmup steps (30K vs 15K baseline)
+CosineAnnealingCallback.warmup_steps = 30000
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "understanding_experiments",
+    "name": "E9_3_lejepa_high_lr_clipped",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

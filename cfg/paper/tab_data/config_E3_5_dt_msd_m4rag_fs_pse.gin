@@ -1,0 +1,56 @@
+# E3.5: CLAP trained on DT v1 + MSD + M4-RAG + Freesound + PSE
+# Based on E3.3 with added sound datasets (FS + PSE)
+# Sound datasets (FS + PSE) represent 20% of total weight
+#
+# Key changes from E3.3:
+# - Added Freesound and PSE datasets
+# - Music datasets (DT v1, MSD, M4-RAG) share 80% equally (26.67% each)
+# - Sound datasets (FS, PSE) share 20% equally (10% each)
+#
+# Dataset sizes: DT v1 = 222405, MSD = 403803, M4-RAG = 243084, FS = 286083, PSE = 709536
+# Balanced ratios: [0.35, 0.19, 0.32, 0.10, 0.04]
+
+include "cfg/config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin"
+
+# Override datamodule to use concat of DT v1, MSD, M4-RAG, FS, PSE
+train.datamodule = @concat_text_audio
+
+# Discotube v1 settings (override baseline v2 paths)
+DiscotubeTextAudioCleanDataModule.filelist_train = "/scratch/<group>/discotube/metadata/mmap_ids_train_rel"
+DiscotubeTextAudioCleanDataModule.filelist_val = "/scratch/<group>/discotube/metadata/mmap_ids_val_rel"
+
+# M4-RAG datamodule settings
+M4RAGTextAudioDataModule.batch_size = %batch_size
+M4RAGTextAudioDataModule.data_dir = "/scratch/<group>/mmaps_discotube/"
+M4RAGTextAudioDataModule.filelist_train = "/scratch/<group>/discotube/metadata/m4rag_splits/filelist_train.txt"
+M4RAGTextAudioDataModule.filelist_val = "/scratch/<group>/discotube/metadata/m4rag_splits/filelist_val.txt"
+M4RAGTextAudioDataModule.metadata_file = "/scratch/<group>/discotube/metadata/m4rag_splits/m4rag_metadata.jsonl"
+M4RAGTextAudioDataModule.num_workers = 20
+M4RAGTextAudioDataModule.text_fields = ["description", "background", "analysis", "scene"]
+
+# M4RAG dataset settings
+M4RAGTextAudioDataset.num_frames = 160000
+M4RAGTextAudioDataset.use_audio_type_token = True
+M4RAGTextAudioDataset.audio_type_token_dropout = 0.2
+
+# Override ConcatTextAudioDataModule: DT v1 + MSD + M4-RAG + FS + PSE
+ConcatTextAudioDataModule.datamodules = [
+  @DiscotubeTextAudioCleanDataModule,
+  @MSDTextAudioDataModule,
+  @M4RAGTextAudioDataModule,
+  @FreesoundTextAudioDataModule,
+  @PSETextAudioDataModule,
+]
+
+# Music=80% (26.67% each), Sound=20% (10% each), balanced by dataset size
+ConcatTextAudioDataModule.ratios = [0.35, 0.19, 0.32, 0.10, 0.04]
+
+# Update wandb experiment name
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "data_experiments",
+    "name": "E3_5_dt_msd_m4rag_fs_pse",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

@@ -1,0 +1,17 @@
+# E9.8: LeJEPA with InfoNCE as invariance loss.
+# Same as E8.2 but replaces cosine invariance loss with multi-positive InfoNCE.
+# Goal: test if contrastive (InfoNCE) invariance loss improves over cosine.
+
+include "cfg/config_E8_2_lejepa.gin"
+
+LeJEPA.inv_loss = "info_nce"
+LeJEPA.lambd = 0.05
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "understanding_experiments",
+    "name": "E9_8_lejepa_infonce",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

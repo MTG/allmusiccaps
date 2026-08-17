@@ -1,0 +1,27 @@
+# Parameters for AudioEmbeddingDataModule:
+# ==============================================================================
+# data_dir and filelist_path are set in the SLURM script
+AudioEmbeddingDataModule.data_dir = "/scratch/<group>/mmaps_discotube/" 
+AudioEmbeddingDataModule.filelist_path = None
+AudioEmbeddingDataModule.file_format = "mmap"
+AudioEmbeddingDataModule.mono = True
+AudioEmbeddingDataModule.half_precision = True
+AudioEmbeddingDataModule.num_workers = 20
+AudioEmbeddingDataModule.batch_size = 1024
+AudioEmbeddingDataModule.overlap_ratio = 0.0
+AudioEmbeddingDataModule.n_seconds = 5
+AudioEmbeddingDataModule.last_chunk_ratio = 0.5
+AudioEmbeddingDataModule.orig_freq = 16000
+AudioEmbeddingDataModule.new_freq = 16000
+
+# Parameters for extract_embeddings:
+# ==============================================================================
+extract_embeddings.model = @OMARRQ
+extract_embeddings.layers = [1,3,5,7,9,11,13,15,17,19,21,23]
+# out_dir is set in the SLURM script via command line args
+extract_embeddings.out_dir = "/scratch/<group>/omarrq_embeddings/discotube/"
+
+# OMARRQ config
+OMARRQ.model_id = "mtg-upf/omar-rq-multicodebook"
+# OMARRQ.model_id = "mtg-upf/clap_omarrq_mp_small_music"
+

@@ -1,0 +1,58 @@
+# Local debug configuration for SLAP training
+# Runs on CPU with dummy data, no external files required
+
+# Wandb settings - offline mode for local debugging
+train.wandb_params = {
+    "project": "text-audio",
+    "name": "debug.slap.local",
+    "offline": True,
+    "save_dir": "./debug_logs/",
+}
+
+# Lightning trainer parameters - minimal CPU configuration
+train.params = {
+    "accelerator": "cpu",
+    "devices": 1,
+    "max_steps": 10,
+    "log_every_n_steps": 1,
+    "precision": "32-true",
+}
+
+# Use dummy datamodule (no external files needed)
+train.datamodule = @dummy_text_audio
+
+# Module configuration
+def_module.module = @slap
+
+# SLAP model settings
+SLAP.audio_encoder = @OMARRQ
+SLAP.text_encoder = @AllMPNetBaseV2
+SLAP.proj_size = 512
+SLAP.predictor_hidden_size = 4096
+SLAP.lambd = 0.5
+SLAP.ema_tau = 0.95
+SLAP.lr = 1e-4
+SLAP.weight_decay = 1e-2
+SLAP.seed = 42
+SLAP.train_audio_encoder = False  # Frozen for faster debugging
+SLAP.train_text_encoder = False   # Frozen for faster debugging
+SLAP.aggregation_type = "mean"    # Works with 10s audio
+
+# Encoder settings
+OMARRQ.model_id = "mtg-upf/clap_omarrq_mp_small_music"
+AllMPNetBaseV2.model_id = "sentence-transformers/all-mpnet-base-v2"
+
+# Cosine annealing scheduler - short warmup for debug runs
+CosineAnnealingCallback.warmup_steps = 2
+CosineAnnealingCallback.eta_min = 1e-7
+
+# Dummy datamodule parameters - dual view for SLAP
+DummyTextAudioDataModule.batch_size = 4
+DummyTextAudioDataModule.num_workers = 0
+DummyTextAudioDataModule.num_train_samples = 100
+DummyTextAudioDataModule.num_val_samples = 20
+DummyTextAudioDataModule.num_frames = 240000  # 10s at 24kHz
+DummyTextAudioDataModule.sample_rate = 24000
+DummyTextAudioDataModule.half_precision = False  # Use float32 for CPU
+DummyTextAudioDataModule.n_text_views = 2
+DummyTextAudioDataModule.n_audio_views = 2

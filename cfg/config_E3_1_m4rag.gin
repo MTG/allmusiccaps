@@ -1,0 +1,41 @@
+# E3.1: CLAP trained on M4-RAG dataset
+# Based on config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin
+# with M4-RAG data instead of concat datamodule
+#
+# Key changes from baseline:
+# - Training data: M4-RAG (rich music descriptions matched with Discotube audio)
+# - Same audio encoder: OMARRQ
+# - Same text encoder: all-mpnet-base-v2
+#
+# PREREQUISITES:
+# 1. Run scripts/create_m4rag_splits.py to generate train/val splits
+# 2. Copy splits to cluster at /scratch/<group>/m4rag/
+
+include "cfg/config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin"
+
+# Override datamodule
+train.datamodule = @m4rag_text_audio
+
+# M4-RAG datamodule settings
+M4RAGTextAudioDataModule.batch_size = %batch_size
+M4RAGTextAudioDataModule.data_dir = "/scratch/<group>/mmaps_discotube/"
+M4RAGTextAudioDataModule.filelist_train = "/scratch/<group>/discotube/metadata/m4rag_splits/filelist_train.txt"
+M4RAGTextAudioDataModule.filelist_val = "/scratch/<group>/discotube/metadata/m4rag_splits/filelist_val.txt"
+M4RAGTextAudioDataModule.metadata_file = "/scratch/<group>/discotube/metadata/m4rag_splits/m4rag_metadata.jsonl"
+M4RAGTextAudioDataModule.num_workers = 20
+M4RAGTextAudioDataModule.text_fields = ["description", "background", "analysis", "scene"]
+
+# M4RAG dataset settings
+M4RAGTextAudioDataset.num_frames = 160000
+M4RAGTextAudioDataset.use_audio_type_token = True
+M4RAGTextAudioDataset.audio_type_token_dropout = 0.2
+
+# Update wandb experiment name
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "data_experiments",
+    "name": "E3_1_m4rag",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

@@ -1,0 +1,31 @@
+# E8.1: SLAP (Siamese Language-Audio Pretraining) trained on music + sound + quotes.
+# Same data and encoder configuration as E7.5 (all 12 OMARRQ layers, audio type tokens,
+# both towers trainable, batch size 128).
+# Replaces CLAP contrastive loss with BYOL-style EMA target + predictor (no negatives).
+
+include "cfg/paper/tab_text_encoder/config_E7_5_all_layers_train_text.gin"
+
+def_module.module = @slap
+
+# SLAP model settings (mirrors CLAP params from baseline where applicable)
+SLAP.audio_encoder = @OMARRQ
+SLAP.text_encoder = @AllMPNetBaseV2
+SLAP.proj_size = 512
+SLAP.predictor_hidden_size = 2048
+SLAP.lambd = 0.5
+SLAP.ema_tau = 0.95
+SLAP.lr = 5e-6
+SLAP.weight_decay = 0.01
+SLAP.seed = 0
+SLAP.train_audio_encoder = True
+SLAP.train_text_encoder = True
+SLAP.aggregation_type = "mean"
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "layer_experiments",
+    "name": "E8_1_slap",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

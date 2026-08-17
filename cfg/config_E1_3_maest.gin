@@ -1,0 +1,37 @@
+# E1.3: CLAP with MAEST audio encoder
+# Based on config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin
+# with MAEST instead of OMARRQ
+#
+# Key changes from baseline:
+# - Audio encoder: MAEST (768-dim, 16kHz)
+# - Same text encoder: all-mpnet-base-v2
+# - Same training data: concat (DiscoTube + MSD + Freesound + PSE)
+#
+# NOTE: MAEST expects 16kHz audio. The source audio is already at 16kHz,
+# so effectively no resampling is needed.
+
+include "cfg/config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin"
+
+# Override audio encoder
+CLAP.audio_encoder = @MAEST
+
+# MAEST encoder settings
+MAEST.model_id = "mtg-upf/discogs-maest-30s-pw-129e-519l"
+MAEST.local_files_only = True
+
+# Override sample rate for MAEST (16kHz)
+new_freq = 16000
+data.data_utils.AudioDataset.new_freq = %new_freq
+
+
+batch_size = 128
+
+# Update wandb experiment name
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "encoder_experiments",
+    "name": "E1_3_maest",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

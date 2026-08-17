@@ -1,0 +1,38 @@
+# E8.5d: SLAP with aggressive dual-view augmentation.
+# Same as E8.5a but with stronger waveform augmentation (higher noise + wider gain range).
+# Tests whether stronger augmentation improves or hurts representation quality.
+
+include "cfg/config_E8_1_slap.gin"
+
+# Aggressive dual audio views for all datasets
+DiscotubeTextAudioCleanDataModule.n_audio_views = 2
+DiscotubeTextAudioCleanDataModule.audio_noise_std = 0.01
+DiscotubeTextAudioCleanDataModule.audio_gain_range = (0.6, 1.4)
+MSDTextAudioDataModule.n_audio_views = 2
+MSDTextAudioDataModule.audio_noise_std = 0.01
+MSDTextAudioDataModule.audio_gain_range = (0.6, 1.4)
+M4RAGTextAudioDataModule.n_audio_views = 2
+M4RAGTextAudioDataModule.audio_noise_std = 0.01
+M4RAGTextAudioDataModule.audio_gain_range = (0.6, 1.4)
+FreesoundTextAudioDataModule.n_audio_views = 2
+FreesoundTextAudioDataModule.audio_noise_std = 0.01
+FreesoundTextAudioDataModule.audio_gain_range = (0.6, 1.4)
+PSETextAudioDataModule.n_audio_views = 2
+PSETextAudioDataModule.audio_noise_std = 0.01
+PSETextAudioDataModule.audio_gain_range = (0.6, 1.4)
+
+# Dual text views for all datasets
+DiscotubeTextAudioCleanDataModule.n_text_views = 2
+MSDTextAudioDataModule.n_text_views = 2
+M4RAGTextAudioDataModule.n_text_views = 2
+FreesoundTextAudioDataModule.n_text_views = 2
+PSETextAudioDataModule.n_text_views = 2
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "layer_experiments",
+    "name": "E8_5d_slap_dual_view_aggressive",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

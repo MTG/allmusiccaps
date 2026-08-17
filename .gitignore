@@ -1,0 +1,30 @@
+venv/
+.venv/
+
+# Build artefacts
+build/
+dist/
+__pycache__/
+*.egg-info/
+*.py[cod]
+
+# Editor / tooling
+.claude/
+.DS_Store
+.ruff_cache/
+.pytest_cache/
+
+# Local notes (may contain cluster paths or credentials)
+CLAUDE.md
+
+# Logs and checkpoints
+slurm_logs/
+debug_logs/
+wandb/
+lightning_logs/
+*.ckpt
+
+# The full AllMusicCaps release is distributed via the Hugging Face Hub
+# (mtg-upf/allmusiccaps); only the small sample is tracked here.
+data/allmusiccaps/*.jsonl
+data/allmusiccaps/_inputs/

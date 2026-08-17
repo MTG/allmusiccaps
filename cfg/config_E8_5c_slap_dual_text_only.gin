@@ -1,0 +1,21 @@
+# E8.5c: SLAP with text-only dual view augmentation.
+# Extends E8.1 with double text sampling for the intramodal text branch.
+# No audio augmentation -- isolates the effect of text view diversity.
+
+include "cfg/config_E8_1_slap.gin"
+
+# Dual text views for all datasets (no audio augmentation)
+DiscotubeTextAudioCleanDataModule.n_text_views = 2
+MSDTextAudioDataModule.n_text_views = 2
+M4RAGTextAudioDataModule.n_text_views = 2
+FreesoundTextAudioDataModule.n_text_views = 2
+PSETextAudioDataModule.n_text_views = 2
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "layer_experiments",
+    "name": "E8_5c_slap_dual_text_only",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

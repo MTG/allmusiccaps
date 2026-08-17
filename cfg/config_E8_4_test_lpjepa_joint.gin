@@ -1,0 +1,27 @@
+# E8.4 test: Small-scale LpJEPA joint-SW experiment for quick validation.
+# Same as E8.4 but single node, 1 GPU, reduced steps.
+
+include "cfg/config_E8_4_lpjepa_joint.gin"
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "layer_experiments",
+    "name": "E8_4_test_lpjepa_joint",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}
+
+train.params = {
+    'accelerator': 'gpu',
+    'num_nodes': 1,
+    'devices': 1,
+    'log_every_n_steps': 50,
+    'check_val_every_n_epoch': 4,
+    'max_steps': 10000,
+    'num_sanity_val_steps': 0,
+    'precision': 'bf16-mixed',
+    'strategy': 'ddp_find_unused_parameters_true',
+}
+
+CosineAnnealingCallback.warmup_steps = 500

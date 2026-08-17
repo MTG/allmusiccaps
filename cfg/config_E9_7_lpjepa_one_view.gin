@@ -1,0 +1,36 @@
+# E9.7: LpJEPA with one view (no multiview).
+# Same parameters as E8.2 (LeJEPA baseline) but using LpJEPA module.
+# Single audio and text view per sample (default behavior).
+# Goal: test LpJEPA regularization with same view setup as LeJEPA E8.2.
+
+include "cfg/config_E8_2_lejepa.gin"
+
+def_module.module = @lpjepa
+
+# LpJEPA model settings (same as E8.2 LeJEPA where applicable)
+LpJEPA.audio_encoder = @OMARRQ
+LpJEPA.text_encoder = @AllMPNetBaseV2
+LpJEPA.proj_size = 512
+LpJEPA.lr = 5e-6
+LpJEPA.weight_decay = 0.01
+LpJEPA.seed = 0
+LpJEPA.train_audio_encoder = True
+LpJEPA.train_text_encoder = True
+LpJEPA.aggregation_type = "mean"
+LpJEPA.lambd = 0.75
+LpJEPA.mu = 0.0
+LpJEPA.p_norm = 2.0
+LpJEPA.n_slices = 8192
+LpJEPA.target_distribution = "rectified_lp_distribution"
+LpJEPA.sw_mode = "independent"
+LpJEPA.inv_loss = "cosine"
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "understanding_experiments",
+    "name": "E9_7_lpjepa_one_view",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}
+

@@ -1,0 +1,59 @@
+# general training parameters
+train.wandb_params = {
+    "project": "text-audio",
+    "name": "dev.mtg_text_audio",
+    "offline": True,
+    "save_dir": "/projects/<group>/logs/",
+    "entity": "<anon-entity>",
+    "group": "vanilla_clap",
+}
+
+# Lighting trainer parameters
+train.params = {
+    "accelerator": "gpu",
+    "devices": 1,
+    "max_steps": 400,
+    "log_every_n_steps": 50,
+    "precision": "bf16-mixed"
+}
+
+train.datamodule = @discotube_text_audio
+
+# Choose the devalopment dataloader
+def_module.module = @clap
+
+CLAP.audio_encoder = @OMARRQ
+CLAP.text_encoder = @AllMPNetBaseV2
+CLAP.proj_size = 512
+CLAP.temp = 0.1
+CLAP.lr = 1e-4
+CLAP.weight_decay = 1e-2
+CLAP.seed = 0
+CLAP.train_audio_encoder = True
+CLAP.train_text_encoder = False
+CLAP.tokenizers_parallelism = False
+
+OMARRQ.model_id = "mtg-upf/clap_omarrq_mp_small_music"
+AllMPNetBaseV2.model_id = "sentence-transformers/all-mpnet-base-v2"
+
+# CosineAnnealing scheduler
+CosineAnnealingCallback.warmup_steps = 10000
+CosineAnnealingCallback.eta_min = 1e-7
+
+# Discogs datamodule parameters
+DiscotubeTextAudioDataModule.batch_size = 128
+DiscotubeTextAudioDataModule.num_workers = 8
+DiscotubeTextAudioDataModule.data_dir = "/"
+DiscotubeTextAudioDataModule.filelist_train = "/Users/<user>/data/text_audio/discotube_sample/ids"
+DiscotubeTextAudioDataModule.filelist_val = "/Users/<user>/data/text_audio/discotube_sample/ids"
+DiscotubeTextAudioDataModule.metadata_youtube_file = "/Users/<user>/data/text_audio/discotube_sample/yotube_metadata.jsonl"
+DiscotubeTextAudioDataModule.metadata_discogs_file = "/Users/<user>/data/text_audio/discotube_sample/discogs_metadata.jsonl"
+DiscotubeTextAudioDataModule.metadata_id_map_file = "/Users/<user>/data/text_audio/discotube_sample/youtube_to_discgos_map.jsonl"
+DiscotubeTextAudioDataset.metadata_dropout = 0.4
+# Dataloader
+AudioDataset.num_frames = 480000 # 30s
+AudioDataset.orig_freq = 16000
+AudioDataset.new_freq = 24000
+AudioDataset.mono = True
+AudioDataset.half_precision = True
+

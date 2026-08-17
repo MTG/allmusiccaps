@@ -1,0 +1,140 @@
+# Macros:
+# ==============================================================================
+new_freq = 24000
+batch_size = 64
+
+# Parameters for AudioDataset:
+# ==============================================================================
+data.data_utils.AudioDataset.half_precision = True
+data.data_utils.AudioDataset.mono = True
+data.data_utils.AudioDataset.new_freq = 24000
+data.data_utils.AudioDataset.orig_freq = 16000
+
+
+# Parameters for build_module:
+# ==============================================================================
+build_module.ckpt_path = ''
+build_module.module = @modules.maskingmodel.MaskingModel
+build_module.net = @nets.conformer.Conformer
+build_module.representation = \
+    [@nets.cqt.CQT,
+     @nets.encodec.EnCodec,
+     @nets.melspectrogram.MelSpectrogram,
+     @nets.waveform.Waveform]
+
+def_module.module = @lejepa
+
+# Parameters for LeJEPA:
+# ==============================================================================
+LeJEPA.aggregation_type = 'mean'
+LeJEPA.audio_encoder = @OMARRQ
+LeJEPA.text_encoder = @AllMPNetBaseV2
+LeJEPA.lr = 5e-5
+LeJEPA.n_pool_att_heads = 8
+LeJEPA.proj_size = 128
+LeJEPA.seed = 0
+LeJEPA.train_audio_encoder = True
+LeJEPA.train_text_encoder = True
+LeJEPA.weight_decay = 5e-2
+LeJEPA.lambd = 0.02
+LeJEPA.inv_loss = "dino"
+LeJEPA.n_slices = 2048
+LeJEPA.n_points = 17
+
+OMARRQ.model_id = "mtg-upf/clap_omarrq_mp_small_music"
+AllMPNetBaseV2.model_id = "sentence-transformers/all-mpnet-base-v2"
+AllMPNetBaseV2.local_files_only = True
+
+
+# Parameters for CosineAnnealingCallback:
+# ==============================================================================
+CosineAnnealingCallback.eta_min = 1e-07
+CosineAnnealingCallback.warmup_steps = 15000
+
+
+# Parameters for train:
+# ==============================================================================
+train.params = \
+    {'accelerator': 'gpu',
+     'num_nodes': 2,
+     'devices': 4,
+     'log_every_n_steps': 50,
+     'check_val_every_n_epoch': 4,
+     'max_steps': 150000,
+     'num_sanity_val_steps': 0,
+     'precision': 'bf16-mixed',
+     'strategy': 'ddp_find_unused_parameters_true'}
+
+train.wandb_params = \
+    {'entity': '<anon-entity>',
+     'group': 'vanilla_clap',
+     'name': 'lejepa_mpnet_base_v2_ssl_mp_10s_small_dt__lr_5e-5__l2e-2__bs128_dino_emb128',
+     'offline': True,
+     'project': 'text-audio',
+     'save_dir': '/projects/<group>/logs/'}
+
+train.datamodule = @concat_text_audio
+train.hf_ckpt = None
+train.ckpt_save_every_n_epochs = 4
+
+
+# Parameters for DiscotubeTextAudioCleanDataModule:
+# ==============================================================================
+DiscotubeTextAudioCleanDataModule.batch_size = %batch_size
+DiscotubeTextAudioCleanDataModule.num_workers = 20
+DiscotubeTextAudioCleanDataModule.data_dir = "/scratch/<group>/mmaps_discotube/"
+DiscotubeTextAudioCleanDataModule.filelist_train =  "/scratch/<group>/discotube/metadata/mmap_ids_train_rel"
+DiscotubeTextAudioCleanDataModule.filelist_val =  "/scratch/<group>/discotube/metadata/mmap_ids_val_rel"
+DiscotubeTextAudioCleanDataModule.text_file = "/scratch/<group>/discotube/metadata/Qwen_Qwen2.5-32B__chatgpt_v2__t0.5__1.1.jsonl"
+DiscotubeTextAudioCleanDataModule.max_sentences = 3
+
+
+DiscotubeTextAudioCleanDataset.num_frames = 160000 # num frames @ original sr
+DiscotubeTextAudioCleanDataset.folder_structure_type = "bsc"
+
+# Parameters for MSDTextAudioDataModule:
+# ==============================================================================
+MSDTextAudioDataModule.batch_size = %batch_size
+MSDTextAudioDataModule.num_workers = 20
+MSDTextAudioDataModule.data_dir = "/scratch/<group>/mmaps_msd/mp3/"
+MSDTextAudioDataModule.filelist_train =  "/scratch/<group>/mmaps_msd/filelist_train_mmap.txt"
+MSDTextAudioDataModule.filelist_val =  "/scratch/<group>/mmaps_msd/filelist_train_mmap.txt"
+MSDTextAudioDataModule.description_prob = 0.5
+
+MSDTextAudioDataset.num_frames = 160000 # num frames @ original sr
+
+# Parameters for FreesoundTextAudioDataModule:
+# ==============================================================================
+FreesoundTextAudioDataModule.batch_size = %batch_size
+FreesoundTextAudioDataModule.num_workers = 20
+FreesoundTextAudioDataModule.data_dir = "/scratch/<group>/freesound/"
+FreesoundTextAudioDataModule.filelist_train =  "/scratch/<group>/mmaps_freesound/filelist_full_train_mmap.txt"
+FreesoundTextAudioDataModule.filelist_val =  "/scratch/<group>/mmaps_freesound/filelist_full_val_mmap.txt"
+FreesoundTextAudioDataModule.text_file = "/scratch/<group>/mmaps_freesound/freesound_metadata.jsonl"
+FreesoundTextAudioDataModule.description_prob = 0.2
+
+FreesoundTextAudioDataset.num_frames = 160000 # num frames @ original sr
+
+# Parameters for PSETextAudioDataModule:
+# ==============================================================================
+PSETextAudioDataModule.batch_size = %batch_size
+PSETextAudioDataModule.num_workers = 20
+PSETextAudioDataModule.data_dir = "/scratch/<group>/mmaps_pse/"
+PSETextAudioDataModule.filelist_train =  "/scratch/<group>/mmaps_pse/filelist_train.txt"
+PSETextAudioDataModule.filelist_val =  "/scratch/<group>/mmaps_pse/filelist_val.txt"
+
+PSETextAudioDataset.num_frames = 160000 # num frames @ original sr
+
+# Parameters for ConcatTextAudioDataModule:
+# ==============================================================================
+
+ConcatTextAudioDataModule.datamodules = [
+  @DiscotubeTextAudioCleanDataModule,
+  @MSDTextAudioDataModule,
+  @FreesoundTextAudioDataModule,
+  @PSETextAudioDataModule,
+]
+
+ConcatTextAudioDataModule.ratios = [0.55, 0.30, 0.11, 0.04]
+ConcatTextAudioDataModule.batch_size = %batch_size
+ConcatTextAudioDataModule.num_workers = 20

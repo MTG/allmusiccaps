@@ -1,0 +1,17 @@
+# E9.9: LeJEPA with InfoNCE invariance loss and frozen text encoder.
+# Same as E9.8 but does NOT train the text encoder and keeps the original
+# batch size (384 instead of 128).
+
+include "cfg/paper/tab_objective/config_E8_6_lejepa.gin"
+
+LeJEPA.inv_loss = "info_nce"
+LeJEPA.lambd = 0.05
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "understanding_experiments",
+    "name": "E9_9_lejepa_infonce",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

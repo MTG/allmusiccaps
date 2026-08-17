@@ -1,0 +1,27 @@
+# E2.1: CLAP with RoBERTa text encoder
+# Based on config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin
+# with RoBERTa-base instead of all-mpnet-base-v2
+#
+# Key changes from baseline:
+# - Text encoder: roberta-base (768-dim)
+# - Same audio encoder: OMARRQ
+# - Same training data: concat (DiscoTube + MSD + Freesound + PSE)
+
+include "cfg/config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin"
+
+# Override text encoder
+CLAP.text_encoder = @RoBERTaTextEncoder
+
+# RoBERTa encoder settings
+RoBERTaTextEncoder.model_id = "roberta-base"
+RoBERTaTextEncoder.local_files_only = True
+
+# Update wandb experiment name
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "encoder_experiments",
+    "name": "E2_1_roberta_base",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

@@ -1,0 +1,17 @@
+# E8.4: LpJEPA with joint SW mode.
+# Same as E8.3 but SW loss is applied jointly over both modalities (cat([z_a, z_t]))
+# rather than independently per modality. Tests whether cross-modal distribution
+# alignment via SW can replace/reduce the burden on the MSE invariance loss.
+
+include "cfg/config_E8_3_lpjepa.gin"
+
+LpJEPA.sw_mode = "joint"
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "layer_experiments",
+    "name": "E8_4_lpjepa_joint",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

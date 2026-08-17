@@ -1,0 +1,94 @@
+[project]
+name = "amclap"
+version = "0.1.0"
+description = "Contrastive audio-language models trained with album-review derived captions (AllMusicCaps)"
+readme = "README.md"
+requires-python = ">= 3.10"
+license = { text = "AGPL-3.0-or-later" }
+keywords = ["music", "audio", "clap", "contrastive", "music-information-retrieval"]
+classifiers = [
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+  "Programming Language :: Python :: 3",
+  "Topic :: Multimedia :: Sound/Audio :: Analysis",
+]
+
+# Inference dependencies. Everything needed for
+# `from amclap import get_model` to load a published model and embed audio/text.
+dependencies = [
+  "lightning>=2.4,<3.0",
+  "torch>=2.6,<3.0",
+  "torchaudio>=2.6,<3.0",
+  "gin-config>=0.5,<1.0",
+  "einops>=0.8,<1.0",
+  "transformers>=4.50,<5.0",
+  # Pinned <5.2: 5.2 renamed the inner module from `auto_model` to `model`,
+  # which silently breaks loading the fine-tuned text-encoder weights of the
+  # trainable-TE checkpoints (every `text_encoder.*` key stops matching).
+  "sentence_transformers>=5.0,<5.2",
+  "omar-rq~=0.2",
+  # get_model downloads weights from the Hub, so this is core, not a dev extra.
+  "huggingface_hub",
+]
+
+[project.optional-dependencies]
+# Pre-training and fine-tuning.
+#
+# `lejepa` has no PyPI release, so it is declared as a direct git reference.
+# PyPI rejects direct references in *core* dependencies, which is why it lives
+# here: `pip install amclap` works from PyPI, while `pip install amclap[train]`
+# needs git access. Only the SigReg objective touches it.
+train = [
+  "lejepa@git+https://github.com/rbalestr-lab/lejepa.git",
+  "wandb",
+  "pandas",
+  # >=3 keeps pip off the 2.x line, whose `pa.PyExtensionType` was removed in
+  # pyarrow 15. Left unpinned, the resolver happily pairs datasets 2.14 with a
+  # current pyarrow and every import of `datasets` then fails.
+  "datasets>=3.0",
+]
+# Downstream evaluation and analysis.
+eval = [
+  "scikit_learn>=1.5",
+  # Range rather than `~=1.14.1`: the exact pin dragged the whole resolution
+  # backwards, since nothing else in the stack still supports it.
+  "scipy>=1.14",
+  "pandas",
+  "matplotlib",
+  "essentia",
+  "cffi",
+]
+llm_preprocess = ["vllm>=0.5"]
+# What CI needs: the test suite only exercises the inference core, so this
+# deliberately excludes the training and evaluation stacks.
+test = [
+  "pytest",
+  "ruff~=0.15",
+  # amclap.data imports every datamodule eagerly, and the MSD one needs pandas.
+  "pandas",
+]
+dev = [
+  "amclap[train,eval,test]",
+]
+
+[project.urls]
+Homepage = "https://github.com/MTG/allmusiccaps"
+Repository = "https://github.com/MTG/allmusiccaps"
+
+[tool.setuptools.packages.find]
+# Explicit discovery: auto-discovery cannot cope with `cfg/` and `tests/`
+# sitting alongside the package.
+include = ["amclap*"]
+
+[tool.setuptools.package-data]
+amclap = ["**/*.sh"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# `scripts/` ships in the repository but is not part of the installed package,
+# so put the repo root on sys.path for the tests that exercise it.
+pythonpath = ["."]
+
+[build-system]
+requires = ["setuptools>=65.5.0", "wheel"]
+build-backend = "setuptools.build_meta"

@@ -1,0 +1,88 @@
+# Macros:
+# ==============================================================================
+batch_size = 128
+
+def_module.module = @clap
+
+# Parameters for CLAP:
+# ==============================================================================
+CLAP.aggregation_type = "none"
+CLAP.audio_encoder = @nets.transformer.Transformer
+CLAP.text_encoder = @AllMPNetBaseV2
+CLAP.lr = 1e-6
+CLAP.n_pool_att_heads = 8
+CLAP.proj_size = 512
+CLAP.seed = 0
+CLAP.temp = 0.1
+CLAP.train_audio_encoder = True
+CLAP.train_text_encoder = True
+CLAP.weight_decay = 0.01
+CLAP.loss_type = "info_nce_multimodal"
+
+AllMPNetBaseV2.model_id = "sentence-transformers/all-mpnet-base-v2"
+# AllMPNetBaseV2.model_id = "sentence-transformers/all-distilroberta-v1"
+AllMPNetBaseV2.tokenizers_parallelism = False
+
+
+# Parameters for CosineAnnealingCallback:
+# ==============================================================================
+CosineAnnealingCallback.eta_min = 1e-07
+CosineAnnealingCallback.warmup_steps = 5000
+
+
+# Parameters for train:
+# ==============================================================================
+train.params = \
+    {'accelerator': 'gpu',
+     'devices': 4,
+     'log_every_n_steps': 50,
+     'check_val_every_n_epoch': 10,
+     'max_steps': 150000,
+     'num_nodes': 1,
+     'num_sanity_val_steps': 0,
+     'precision': 'bf16-mixed',
+     'strategy': 'ddp_find_unused_parameters_true'}
+
+train.wandb_params = \
+    {'entity': '<anon-entity>',
+     'group': 'pre_extracted_audio_embeddings',
+     'name': 'mpnet__omar_clap_5s__cls_nopos__dt',
+     'offline': False,
+     'project': 'text-audio',
+     'save_dir': '/mnt/projects/mtg_text_audio/wandb'}
+
+train.datamodule = @discotube_text_audio_clean
+train.ckpt_save_every_n_epochs = 20
+
+
+data.data_utils.AudioDataset.num_frames = 480000 # 30s
+data.data_utils.AudioDataset.orig_freq = 16000
+data.data_utils.AudioDataset.new_freq = 24000
+data.data_utils.AudioDataset.mono = True
+data.data_utils.AudioDataset.half_precision = True
+
+# Parameters for DiscotubeTextAudioCleanDataModule:
+# ==============================================================================
+DiscotubeTextAudioCleanDataModule.batch_size = %batch_size
+DiscotubeTextAudioCleanDataModule.num_workers = 20
+DiscotubeTextAudioCleanDataModule.data_dir = "/mnt/projects/mtg_text_audio/audio_embs/omar-rq-multifeature-25hz-fsq/discotube_5s"
+DiscotubeTextAudioCleanDataModule.filelist_train =  "/mnt/projects/mtg_text_audio/audio_embs/omar-rq-multifeature-25hz-fsq/discotube/ids_train"
+DiscotubeTextAudioCleanDataModule.filelist_val =  "/mnt/projects/mtg_text_audio/audio_embs/omar-rq-multifeature-25hz-fsq/discotube/ids_val"
+DiscotubeTextAudioCleanDataModule.text_file = "/path/to/discotube/metadata/Qwen_Qwen2.5-32B__chatgpt_v2__t0.5__1.1.jsonl"
+DiscotubeTextAudioCleanDataModule.max_sentences = 3
+
+DiscotubeTextAudioCleanDataset.num_frames = 48
+DiscotubeTextAudioCleanDataset.input_audio_is_embedding = True
+
+# Parameters for Transformer
+# ==============================================================================
+nets.transformer.Transformer.in_chans = 1024
+nets.transformer.Transformer.embed_dim = 512
+nets.transformer.Transformer.head_dim = 512
+nets.transformer.Transformer.depth = 2
+nets.transformer.Transformer.num_heads = 8
+nets.transformer.Transformer.mlp_ratio = 4.0
+nets.transformer.Transformer.dropout = 0.2
+nets.transformer.Transformer.positional_embedding_type = "rope"
+nets.transformer.Transformer.do_vit_tokenization = False
+nets.transformer.Transformer.do_classification = True

@@ -1,0 +1,102 @@
+{
+  "song_describer": {
+    "narrative": {
+      "R01": {
+        "mrr": 0.206076,
+        "n_queries": 95
+      },
+      "R04": {
+        "mrr": 0.228362,
+        "n_queries": 95
+      },
+      "R05": {
+        "mrr": 0.222164,
+        "n_queries": 95
+      }
+    },
+    "affect": {
+      "R01": {
+        "mrr": 0.139867,
+        "n_queries": 152
+      },
+      "R04": {
+        "mrr": 0.175264,
+        "n_queries": 152
+      },
+      "R05": {
+        "mrr": 0.190689,
+        "n_queries": 152
+      }
+    },
+    "scene": {
+      "R01": {
+        "mrr": 0.153676,
+        "n_queries": 75
+      },
+      "R04": {
+        "mrr": 0.164575,
+        "n_queries": 75
+      },
+      "R05": {
+        "mrr": 0.201186,
+        "n_queries": 75
+      }
+    },
+    "figurative": {
+      "R01": {
+        "mrr": 0.132004,
+        "n_queries": 64
+      },
+      "R04": {
+        "mrr": 0.175019,
+        "n_queries": 64
+      },
+      "R05": {
+        "mrr": 0.184858,
+        "n_queries": 64
+      }
+    },
+    "technical": {
+      "R01": {
+        "mrr": 0.236782,
+        "n_queries": 54
+      },
+      "R04": {
+        "mrr": 0.254755,
+        "n_queries": 54
+      },
+      "R05": {
+        "mrr": 0.253565,
+        "n_queries": 54
+      }
+    },
+    "all": {
+      "R01": {
+        "mrr": 0.151374,
+        "n_queries": 746
+      },
+      "R04": {
+        "mrr": 0.188261,
+        "n_queries": 746
+      },
+      "R05": {
+        "mrr": 0.179033,
+        "n_queries": 746
+      }
+    },
+    "unsliced": {
+      "R01": {
+        "mrr": 0.14218,
+        "n_queries": 405
+      },
+      "R04": {
+        "mrr": 0.192377,
+        "n_queries": 405
+      },
+      "R05": {
+        "mrr": 0.171658,
+        "n_queries": 405
+      }
+    }
+  }
+}

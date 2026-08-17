@@ -1,0 +1,56 @@
+# Local debug configuration for CLAP training with HTS-AT encoder
+# Runs on CPU with dummy data, no external files required
+
+# Wandb settings - offline mode for local debugging
+train.wandb_params = {
+    "project": "text-audio",
+    "name": "debug.htsat",
+    "offline": True,
+    "save_dir": "./debug_logs/",
+}
+
+# Lightning trainer parameters - minimal CPU configuration
+train.params = {
+    "accelerator": "cpu",
+    "devices": 1,
+    "max_steps": 5,
+    "log_every_n_steps": 1,
+    "precision": "32-true",
+}
+
+# Use dummy datamodule (no external files needed)
+train.datamodule = @dummy_text_audio
+
+# Module configuration
+def_module.module = @clap
+
+# CLAP model settings with HTS-AT encoder
+CLAP.audio_encoder = @HTSAT
+CLAP.text_encoder = @AllMPNetBaseV2
+CLAP.proj_size = 512
+CLAP.temp = 0.1
+CLAP.lr = 1e-4
+CLAP.weight_decay = 1e-2
+CLAP.seed = 42
+CLAP.train_audio_encoder = False  # Frozen for faster debugging
+CLAP.train_text_encoder = False   # Frozen for faster debugging
+CLAP.aggregation_type = "mean"    # Mean over time dimension (size 1 for HTS-AT)
+
+# HTS-AT encoder settings
+HTSAT.model_id = "laion/clap-htsat-unfused"
+
+# Text encoder settings
+AllMPNetBaseV2.model_id = "sentence-transformers/all-mpnet-base-v2"
+
+# Cosine annealing scheduler - short warmup for debug runs
+CosineAnnealingCallback.warmup_steps = 2
+CosineAnnealingCallback.eta_min = 1e-7
+
+# Dummy datamodule parameters - HTS-AT expects 48kHz audio
+DummyTextAudioDataModule.batch_size = 2
+DummyTextAudioDataModule.num_workers = 0
+DummyTextAudioDataModule.num_train_samples = 20
+DummyTextAudioDataModule.num_val_samples = 10
+DummyTextAudioDataModule.num_frames = 480000  # 10s at 48kHz
+DummyTextAudioDataModule.sample_rate = 48000
+DummyTextAudioDataModule.half_precision = False  # Use float32 for CPU

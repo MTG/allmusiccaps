@@ -1,0 +1,23 @@
+# E9.2: LeJEPA with higher learning rate (5e-5 vs 5e-6).
+# Same model/data as E8.2 (LeJEPA, all 12 OMARRQ layers, audio type tokens,
+# music + sound + quotes, batch size 128).
+# Goal: test if LeJEPA benefits from higher LR closer to the paper's recommendation.
+#
+# LeJEPA paper (arxiv:2511.08544) uses lr=5e-4, wd=5e-2 for ViTs.
+# Our E8.2 baseline uses lr=5e-6, wd=0.01 — 100x lower LR, 5x lower WD.
+# First attempt with lr=5e-4 caused loss explosion after 2K steps.
+# This experiment: lr=5e-5, wd=5e-2 (10x baseline LR).
+
+include "cfg/config_E8_2_lejepa.gin"
+
+LeJEPA.lr = 5e-5
+LeJEPA.weight_decay = 5e-2
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "understanding_experiments",
+    "name": "E9_2_lejepa_high_lr",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

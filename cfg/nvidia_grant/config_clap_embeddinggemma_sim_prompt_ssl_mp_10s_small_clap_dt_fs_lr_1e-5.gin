@@ -1,0 +1,184 @@
+# Macros:
+# ==============================================================================
+new_freq = 24000
+batch_size = 384
+
+# Parameters for AudioDataModule:
+# ==============================================================================
+AudioDataModule.num_workers = 0
+
+# Parameters for AudioDataset:
+# ==============================================================================
+AudioDataset.half_precision = True
+AudioDataset.mono = True
+AudioDataset.new_freq = 24000
+AudioDataset.num_frames = 240000
+AudioDataset.orig_freq = 44100
+
+
+# Parameters for build_module:
+# ==============================================================================
+build_module.ckpt_path = ''
+build_module.module = @modules.maskingmodel.MaskingModel
+build_module.net = @nets.conformer.Conformer
+build_module.representation = \
+    [@nets.cqt.CQT,
+     @nets.encodec.EnCodec,
+     @nets.melspectrogram.MelSpectrogram,
+     @nets.waveform.Waveform]
+
+def_module.module = @clap
+
+# Parameters for CLAP:
+# ==============================================================================
+CLAP.aggregation_type = 'mean'
+CLAP.audio_encoder = @OMARRQ
+CLAP.text_encoder = @AllMPNetBaseV2
+CLAP.lr = 1e-05
+CLAP.n_pool_att_heads = 8
+CLAP.proj_size = 512
+CLAP.seed = 0
+CLAP.temp = 0.1
+CLAP.tokenizers_parallelism = False
+CLAP.train_audio_encoder = True
+CLAP.train_text_encoder = False
+CLAP.weight_decay = 0.01
+CLAP.embedding_prompt = "task: sentence similarity | query: "
+
+OMARRQ.model_id = "mtg-upf/clap_omarrq_mp_small_music"
+AllMPNetBaseV2.model_id = "google/embeddinggemma-300m"
+
+# Parameters for Conformer:
+# ==============================================================================
+Conformer.alpha_deepnorm = 2.6321480259049848
+Conformer.beta_deepnorm = 0.022386873579657126
+Conformer.conv_kernel_size = 5
+Conformer.depth = 24
+Conformer.dropout = 0.2
+Conformer.embed_dim = 1024
+Conformer.input_dropout = 0.0
+Conformer.mlp_ratio = 4.0
+Conformer.mlp_residual_factor = 4.0
+Conformer.num_heads = 8
+Conformer.num_patches = None
+Conformer.use_deepnorm = True
+Conformer.use_rope = True
+
+# Parameters for CosineAnnealingCallback:
+# ==============================================================================
+CosineAnnealingCallback.eta_min = 1e-07
+CosineAnnealingCallback.warmup_steps = 50000
+
+# Parameters for CQT:
+# ==============================================================================
+CQT.bins_per_octave = 24
+CQT.f_min = 32.703
+CQT.hop_len = 320
+CQT.logC = True
+CQT.magnitude = True
+CQT.n_bins = 188
+CQT.norm_mean = 4.754879065310596
+CQT.norm_std = 1.9055732535255916
+CQT.patch_size = (188, 4)
+CQT.power = 2
+CQT.sr = %new_freq
+
+# Parameters for EnCodec:
+# ==============================================================================
+EnCodec.norm_type = 'global'
+EnCodec.orig_sr = %new_freq
+EnCodec.patch_size = (128, 4)
+EnCodec.stats_path = None
+EnCodec.weights_path = '/scratch/<group>/model_weights/encodec_24khz/'
+
+# Parameters for MaskingModel:
+# ==============================================================================
+MaskingModel.codebook_dim = 16
+MaskingModel.codebook_size = 8196
+MaskingModel.diff_input = False
+MaskingModel.input_representation = @nets.waveform.Waveform
+MaskingModel.lr = 0.0001
+MaskingModel.mask_prob = 0.6
+MaskingModel.mask_seconds = 0.4
+MaskingModel.num_codebooks = 1
+MaskingModel.plot_tokens = False
+MaskingModel.seed = 0
+MaskingModel.weight_decay = 0.01
+
+# Parameters for MelSpectrogram:
+# ==============================================================================
+MelSpectrogram.freq_mask_param = 0
+MelSpectrogram.hop_len = 320
+MelSpectrogram.mel_scale = 'slaney'
+MelSpectrogram.n_mel = 96
+MelSpectrogram.norm = 'slaney'
+MelSpectrogram.norm_mean = 2.06755686098554
+MelSpectrogram.norm_std = 1.268292820667291
+MelSpectrogram.patch_size = (96, 4)
+MelSpectrogram.power = 2
+MelSpectrogram.sr = %new_freq
+MelSpectrogram.stretch_factor = 1
+MelSpectrogram.time_mask_param = 0
+MelSpectrogram.win_len = 512
+
+# Parameters for train:
+# ==============================================================================
+train.params = \
+    {'accelerator': 'gpu',
+     'devices': 8,
+     'log_every_n_steps': 50,
+     'check_val_every_n_epoch': 4,
+     'max_steps': 200000,
+     'num_nodes': 1,
+     'precision': 'bf16-mixed',
+     'strategy': 'ddp_find_unused_parameters_true'}
+train.wandb_params = \
+    {'entity': '<anon-entity>',
+     'group': 'vanilla_clap',
+     'name': 'config_clap_mpnet_embeddinggema_sim_prompt_ssl_mp_10s_small_clap_dt_fs_lr_1e-5',
+     'offline': False,
+     'project': 'text-audio',
+     'save_dir': '/data/shared/<user>/data/logs'}
+
+train.datamodule = @concat_text_audio
+train.hf_ckpt = "mtg-upf/clap_omarrq_mp_small_music"
+
+# Parameters for Waveform:
+# ==============================================================================
+Waveform.norm_mean = None
+Waveform.norm_std = None
+Waveform.patch_size = (1, 1280)
+Waveform.sr = %new_freq
+
+# Parameters for DiscotubeTextAudioCleanDataModule:
+# ==============================================================================
+DiscotubeTextAudioCleanDataModule.batch_size = %batch_size
+DiscotubeTextAudioCleanDataModule.num_workers = 30
+DiscotubeTextAudioCleanDataModule.data_dir = "/"
+DiscotubeTextAudioCleanDataModule.filelist_train =  "/data/shared/<user>/data/discotube/metadata/mmap_ids_train"
+DiscotubeTextAudioCleanDataModule.filelist_val =  "/data/shared/<user>/data/discotube/metadata/mmap_ids_val"
+DiscotubeTextAudioCleanDataModule.text_file = "/data/shared/<user>/data/discotube/metadata/Qwen_Qwen2.5-32B__chatgpt_v2__t0.5__1.1.jsonl"
+DiscotubeTextAudioCleanDataModule.max_sentences = 3
+
+DiscotubeTextAudioCleanDataset.num_frames = 160000 # num freames @ original sr
+
+# Parameters for FreesoundTextAudioDataModule:
+# ==============================================================================
+FreesoundTextAudioDataModule.batch_size = %batch_size
+FreesoundTextAudioDataModule.num_workers = 30
+FreesoundTextAudioDataModule.data_dir = "/data/shared/<user>/data/freesound/mmaps/"
+FreesoundTextAudioDataModule.filelist_train =  "/data/shared/<user>/data/freesound/filelist_full_train_mmap.txt"
+FreesoundTextAudioDataModule.filelist_val =  "/data/shared/<user>/data/freesound/filelist_full_val_mmap.txt"
+FreesoundTextAudioDataModule.text_file = "/data/shared/<user>/data/freesound/freesound_metadata.jsonl"
+FreesoundTextAudioDataModule.description_prob = 0.2
+
+FreesoundTextAudioDataset.num_frames = 160000 # num freames @ original sr
+
+# Parameters for ConcatTextAudioDataModule:
+# ==============================================================================
+ConcatTextAudioDataModule.datamodules = \
+    [@DiscotubeTextAudioCleanDataModule, @FreesoundTextAudioDataModule]
+# ratios based on training dataset sizes
+ConcatTextAudioDataModule.ratios = [0.57, 0.43]
+ConcatTextAudioDataModule.batch_size = %batch_size
+ConcatTextAudioDataModule.num_workers = 30

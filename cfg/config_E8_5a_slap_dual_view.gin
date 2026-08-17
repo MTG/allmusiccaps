@@ -1,0 +1,38 @@
+# E8.5a: SLAP with dual-view augmentation (both audio + text).
+# Extends E8.1 with waveform-domain audio augmentation (different crops + noise/gain)
+# and double text sampling for intramodal text branch.
+
+include "cfg/config_E8_1_slap.gin"
+
+# Dual audio views for all datasets (different crops + waveform augmentation)
+DiscotubeTextAudioCleanDataModule.n_audio_views = 2
+DiscotubeTextAudioCleanDataModule.audio_noise_std = 0.005
+DiscotubeTextAudioCleanDataModule.audio_gain_range = (0.8, 1.2)
+MSDTextAudioDataModule.n_audio_views = 2
+MSDTextAudioDataModule.audio_noise_std = 0.005
+MSDTextAudioDataModule.audio_gain_range = (0.8, 1.2)
+M4RAGTextAudioDataModule.n_audio_views = 2
+M4RAGTextAudioDataModule.audio_noise_std = 0.005
+M4RAGTextAudioDataModule.audio_gain_range = (0.8, 1.2)
+FreesoundTextAudioDataModule.n_audio_views = 2
+FreesoundTextAudioDataModule.audio_noise_std = 0.005
+FreesoundTextAudioDataModule.audio_gain_range = (0.8, 1.2)
+PSETextAudioDataModule.n_audio_views = 2
+PSETextAudioDataModule.audio_noise_std = 0.005
+PSETextAudioDataModule.audio_gain_range = (0.8, 1.2)
+
+# Dual text views for all datasets
+DiscotubeTextAudioCleanDataModule.n_text_views = 2
+MSDTextAudioDataModule.n_text_views = 2
+M4RAGTextAudioDataModule.n_text_views = 2
+FreesoundTextAudioDataModule.n_text_views = 2
+PSETextAudioDataModule.n_text_views = 2
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "layer_experiments",
+    "name": "E8_5a_slap_dual_view",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

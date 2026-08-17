@@ -1,0 +1,82 @@
+# E7.3: ClapJepa using the average of all 12 layers of the OMARRQ encoder,
+# with constant sigreg regularization (lambd=0.05).
+# Data: music + sound + quotes (same as E7.2)
+#   music  = MSD + r4 (M4-RAG)
+#   sound  = FS (Freesound) + PSE
+#   quotes = DT v1 (Discotube v1, sentence-level text)
+#
+# Audio type tokens enabled. Logs layerwise geometric metrics and information imbalance.
+
+include "cfg/config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin"
+
+# Use ClapJepa module
+def_module.module = @clap_jepa
+
+# ClapJepa model settings
+ClapJepa.aggregation_type = 'mean'
+ClapJepa.audio_encoder = @OMARRQ
+ClapJepa.text_encoder = @AllMPNetBaseV2
+ClapJepa.lr = 5e-6
+ClapJepa.n_pool_att_heads = 8
+ClapJepa.proj_size = 512
+ClapJepa.seed = 0
+ClapJepa.temp = 0.1
+ClapJepa.train_audio_encoder = True
+ClapJepa.train_text_encoder = False
+ClapJepa.weight_decay = 0.01
+ClapJepa.inv_loss_type = "info_nce_multimodal"
+# Constant sigreg regularization
+ClapJepa.lambd = 0.05
+ClapJepa.mix_sigreg_views = True
+ClapJepa.n_slices = 2048
+ClapJepa.n_points = 17
+
+# Average all 12 layers of the encoder
+OMARRQ.layers = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+
+# Override datamodule to include M4-RAG
+train.datamodule = @concat_text_audio
+
+# Discotube v1
+DiscotubeTextAudioCleanDataModule.filelist_train = "/scratch/<group>/discotube/metadata/mmap_ids_train_rel"
+DiscotubeTextAudioCleanDataModule.filelist_val = "/scratch/<group>/discotube/metadata/mmap_ids_val_rel"
+
+# M4-RAG datamodule settings
+M4RAGTextAudioDataModule.batch_size = %batch_size
+M4RAGTextAudioDataModule.data_dir = "/scratch/<group>/mmaps_discotube/"
+M4RAGTextAudioDataModule.filelist_train = "/scratch/<group>/discotube/metadata/m4rag_splits/filelist_train.txt"
+M4RAGTextAudioDataModule.filelist_val = "/scratch/<group>/discotube/metadata/m4rag_splits/filelist_val.txt"
+M4RAGTextAudioDataModule.metadata_file = "/scratch/<group>/discotube/metadata/m4rag_splits/m4rag_metadata.jsonl"
+M4RAGTextAudioDataModule.num_workers = 20
+M4RAGTextAudioDataModule.text_fields = ["description", "background", "analysis", "scene"]
+
+M4RAGTextAudioDataset.num_frames = 160000
+M4RAGTextAudioDataset.use_audio_type_token = True
+M4RAGTextAudioDataset.audio_type_token_dropout = 0.2
+
+# ConcatTextAudioDataModule: MSD + r4 + FS + PSE + DT v1
+ConcatTextAudioDataModule.datamodules = [
+  @MSDTextAudioDataModule,
+  @M4RAGTextAudioDataModule,
+  @FreesoundTextAudioDataModule,
+  @PSETextAudioDataModule,
+  @DiscotubeTextAudioCleanDataModule,
+]
+
+# 40% music (MSD + r4), 20% sound (FS + PSE), 40% quotes (DT v1)
+# balanced by dataset size within groups
+# MSD=403803, r4=243084, FS=286083, PSE=709536, DT v1=222405
+ConcatTextAudioDataModule.ratios = [0.15, 0.25, 0.14, 0.06, 0.40]
+
+# Layerwise geometric metrics and information imbalance
+train.layerwise_metrics = True
+train.info_imbalance = True
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "layer_experiments",
+    "name": "E7_3_all_layers_sigreg",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

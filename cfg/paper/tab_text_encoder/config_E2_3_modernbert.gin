@@ -1,0 +1,27 @@
+# E2.3: CLAP with ModernBERT text encoder
+# Based on config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin
+# with ModernBERT-base instead of all-mpnet-base-v2
+#
+# Key changes from baseline:
+# - Text encoder: answerdotai/ModernBERT-base (768-dim)
+# - Same audio encoder: OMARRQ
+# - Same training data: concat (DiscoTube + MSD + Freesound + PSE)
+
+include "cfg/config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin"
+
+# Override text encoder
+CLAP.text_encoder = @ModernBERTTextEncoder
+
+# ModernBERT encoder settings
+ModernBERTTextEncoder.model_id = "answerdotai/ModernBERT-base"
+ModernBERTTextEncoder.local_files_only = True
+
+# Update wandb experiment name
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "encoder_experiments",
+    "name": "E2_3_modernbert_base",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

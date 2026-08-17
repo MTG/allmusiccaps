@@ -1,0 +1,82 @@
+# E5.3: ClapJepa trained on music-only data (DT v1 + MSD + M4-RAG)
+# Same as E5.1 but with mix_sigreg_views=True: each SIGReg view gets half
+# audio + half text embeddings so both views sample from the same mixed distribution.
+
+include "cfg/config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin"
+
+# Override module
+def_module.module = @clap_jepa
+
+# ClapJepa model settings (baseline CLAP params + JEPA params)
+ClapJepa.aggregation_type = 'mean'
+ClapJepa.audio_encoder = @OMARRQ
+ClapJepa.text_encoder = @AllMPNetBaseV2
+ClapJepa.lr = 5e-6
+ClapJepa.n_pool_att_heads = 8
+ClapJepa.proj_size = 512
+ClapJepa.seed = 0
+ClapJepa.temp = 0.1
+ClapJepa.train_audio_encoder = True
+ClapJepa.train_text_encoder = False
+ClapJepa.weight_decay = 0.01
+# JEPA params (from LeJEPA experiments)
+ClapJepa.lambd = 0.02
+ClapJepa.inv_loss_type = "info_nce_multimodal"
+ClapJepa.n_slices = 2048
+ClapJepa.n_points = 17
+# Mixed-modality views for SIGReg loss
+ClapJepa.mix_sigreg_views = True
+
+
+# Full training: 2 nodes, 4 GPUs each
+train.params = {
+    'accelerator': 'gpu',
+    'num_nodes': 2,
+    'devices': 4,
+    'log_every_n_steps': 50,
+    'check_val_every_n_epoch': 4,
+    'max_steps': 150000,
+    'num_sanity_val_steps': 0,
+    'precision': 'bf16-mixed',
+    'strategy': 'ddp_find_unused_parameters_true',
+}
+
+# Override datamodule to use E3.3 data (DT v1 + MSD + M4-RAG)
+train.datamodule = @concat_text_audio
+
+# Discotube v1 settings
+DiscotubeTextAudioCleanDataModule.filelist_train = "/scratch/<group>/discotube/metadata/mmap_ids_train_rel"
+DiscotubeTextAudioCleanDataModule.filelist_val = "/scratch/<group>/discotube/metadata/mmap_ids_val_rel"
+
+# M4-RAG datamodule settings
+M4RAGTextAudioDataModule.batch_size = %batch_size
+M4RAGTextAudioDataModule.data_dir = "/scratch/<group>/mmaps_discotube/"
+M4RAGTextAudioDataModule.filelist_train = "/scratch/<group>/discotube/metadata/m4rag_splits/filelist_train.txt"
+M4RAGTextAudioDataModule.filelist_val = "/scratch/<group>/discotube/metadata/m4rag_splits/filelist_val.txt"
+M4RAGTextAudioDataModule.metadata_file = "/scratch/<group>/discotube/metadata/m4rag_splits/m4rag_metadata.jsonl"
+M4RAGTextAudioDataModule.num_workers = 20
+M4RAGTextAudioDataModule.text_fields = ["description", "background", "analysis", "scene"]
+
+# M4RAG dataset settings
+M4RAGTextAudioDataset.num_frames = 160000
+M4RAGTextAudioDataset.use_audio_type_token = True
+M4RAGTextAudioDataset.audio_type_token_dropout = 0.2
+
+# Override ConcatTextAudioDataModule: DT v1 + MSD + M4-RAG
+ConcatTextAudioDataModule.datamodules = [
+  @DiscotubeTextAudioCleanDataModule,
+  @MSDTextAudioDataModule,
+  @M4RAGTextAudioDataModule,
+]
+
+# Equal proportions (1/3 each), balanced by dataset size
+ConcatTextAudioDataModule.ratios = [0.41, 0.22, 0.37]
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "clap_jepa_experiments",
+    "name": "E5_3_clap_jepa_dt_msd_m4rag_mix_sigreg_views",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

@@ -1,0 +1,31 @@
+# E1.1: CLAP with MERT audio encoder
+# Based on config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin
+# with MERT-v1-95M instead of OMARRQ
+#
+# Key changes from baseline:
+# - Audio encoder: MERT-v1-95M (768-dim, 24kHz)
+# - Same text encoder: all-mpnet-base-v2
+# - Same training data: concat (DiscoTube + MSD + Freesound + PSE)
+
+include "cfg/config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin"
+
+# MERT is slightly larger than OMARRQ, so we can't fit the same batch size in GPU memory. 
+# We reduce it from 384 to 320 (128 + 64).
+batch_size = 128
+
+# Override audio encoder
+CLAP.audio_encoder = @MERT
+
+# MERT encoder settings
+MERT.model_id = "m-a-p/MERT-v1-95M"
+MERT.local_files_only = True
+
+# Update wandb experiment name
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "encoder_experiments",
+    "name": "E1_1_mert_v1_95M",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

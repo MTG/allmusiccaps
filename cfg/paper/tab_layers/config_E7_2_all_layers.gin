@@ -1,0 +1,29 @@
+# E7.2: CLAP using the average of all 12 layers of the OMARRQ encoder.
+# Data: music + sound + quotes (same as E3.9)
+#   music  = MSD + r4 (M4-RAG)
+#   sound  = FS (Freesound) + PSE
+#   quotes = DT v1 (Discotube v1, sentence-level text)
+#
+# No audio_type_token. No sigreg regularization.
+# Logs layerwise geometric metrics and information imbalance.
+
+include "cfg/config_E3_9_music_sound_quotes.gin"
+
+# Average all 12 layers of the encoder
+OMARRQ.layers = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+
+# Re-enable audio type tokens (overrides E3.9 which disables them)
+DiscotubeTextAudioCleanDataset.use_audio_type_token = True
+MSDTextAudioDataset.use_audio_type_token = True
+M4RAGTextAudioDataset.use_audio_type_token = True
+FreesoundTextAudioDataset.use_audio_type_token = True
+PSETextAudioDataset.use_audio_type_token = True
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "layer_experiments",
+    "name": "E7_2_all_layers",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

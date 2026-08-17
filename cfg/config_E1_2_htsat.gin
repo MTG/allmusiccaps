@@ -1,0 +1,43 @@
+# E1.2: CLAP with HTS-AT audio encoder
+# Based on config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin
+# with HTS-AT instead of OMARRQ
+#
+# Key changes from baseline:
+# - Audio encoder: HTS-AT from LAION CLAP (512-dim, 48kHz)
+# - Same text encoder: all-mpnet-base-v2
+# - Same training data: concat (DiscoTube + MSD + Freesound + PSE)
+#
+# NOTE: HTS-AT expects 48kHz audio. The AudioDataset needs to be configured
+# with new_freq=48000 for this experiment.
+
+include "cfg/config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin"
+
+# Override audio encoder
+CLAP.audio_encoder = @HTSAT
+
+# HTS-AT encoder settings
+HTSAT.model_id = "laion/clap-htsat-unfused"
+HTSAT.local_files_only = True
+
+# Override sample rate for HTS-AT (48kHz instead of 24kHz)
+new_freq = 48000
+data.data_utils.AudioDataset.new_freq = %new_freq
+
+# Update num_frames for 48kHz (keeping same duration)
+# Baseline uses 160000 frames at 16kHz orig = 10s
+# At 48kHz target: need to resample from 16kHz, so keep orig frames same
+# but update new_freq for resampling
+DiscotubeTextAudioCleanDataset.num_frames = 160000
+FreesoundTextAudioDataset.num_frames = 160000
+MSDTextAudioDataset.num_frames = 160000
+PSETextAudioDataset.num_frames = 160000
+
+# Update wandb experiment name
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "encoder_experiments",
+    "name": "E1_2_htsat",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

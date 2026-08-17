@@ -1,0 +1,17 @@
+# E9.10: LeJEPA with sigmoid (SigLIP-style) invariance loss, trainable text encoder.
+# Same as E8.2 but replaces cosine invariance loss with multi-positive sigmoid.
+# Counterpart to E9.8 (InfoNCE); keeps E8.2 batch size 128 and trainable text.
+
+include "cfg/config_E8_2_lejepa.gin"
+
+LeJEPA.inv_loss = "sigmoid"
+LeJEPA.lambd = 0.05
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "understanding_experiments",
+    "name": "E9_10_lejepa_sigmoid",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

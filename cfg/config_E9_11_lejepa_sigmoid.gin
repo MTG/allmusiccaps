@@ -1,0 +1,17 @@
+# E9.11: LeJEPA with sigmoid (SigLIP-style) invariance loss, frozen text encoder.
+# Same as E8.6 but replaces cosine invariance loss with multi-positive sigmoid.
+# Counterpart to E9.9 (InfoNCE); keeps E8.6 batch size 384 and frozen text encoder.
+
+include "cfg/paper/tab_objective/config_E8_6_lejepa.gin"
+
+LeJEPA.inv_loss = "sigmoid"
+LeJEPA.lambd = 0.05
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "understanding_experiments",
+    "name": "E9_11_lejepa_sigmoid",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}

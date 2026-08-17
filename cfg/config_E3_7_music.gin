@@ -1,0 +1,50 @@
+# E3.7: CLAP trained on music data only (MSD + M4-RAG / r4)
+# New data naming convention:
+#   music = MSD + r4 (M4-RAG)
+#
+# No audio_type_token. No sigreg regularization.
+# Logs layerwise geometric metrics and information imbalance.
+#
+# Dataset sizes: MSD = 403803, r4 (M4-RAG) = 243084
+# Equal 1/2 weight each, inv-proportional by size: [0.38, 0.62]
+
+include "cfg/config_clap_mpnet_base_v2_ssl_mp_10s_small_clap_dt_msd_fs_pse_lr_5e-6.gin"
+
+train.datamodule = @concat_text_audio
+
+# M4-RAG (r4) datamodule settings
+M4RAGTextAudioDataModule.batch_size = %batch_size
+M4RAGTextAudioDataModule.data_dir = "/scratch/<group>/mmaps_discotube/"
+M4RAGTextAudioDataModule.filelist_train = "/scratch/<group>/discotube/metadata/m4rag_splits/filelist_train.txt"
+M4RAGTextAudioDataModule.filelist_val = "/scratch/<group>/discotube/metadata/m4rag_splits/filelist_val.txt"
+M4RAGTextAudioDataModule.metadata_file = "/scratch/<group>/discotube/metadata/m4rag_splits/m4rag_metadata.jsonl"
+M4RAGTextAudioDataModule.num_workers = 20
+M4RAGTextAudioDataModule.text_fields = ["description", "background", "analysis", "scene"]
+
+# No audio type tokens
+MSDTextAudioDataset.use_audio_type_token = False
+M4RAGTextAudioDataset.use_audio_type_token = False
+M4RAGTextAudioDataset.num_frames = 160000
+
+# ConcatTextAudioDataModule: MSD + r4
+ConcatTextAudioDataModule.datamodules = [
+  @MSDTextAudioDataModule,
+  @M4RAGTextAudioDataModule,
+]
+
+# Equal 1/2 weight each, balanced by dataset size
+# MSD=403803, r4=243084 → inv-prop normalised: [0.38, 0.62]
+ConcatTextAudioDataModule.ratios = [0.38, 0.62]
+
+# Layerwise geometric metrics and information imbalance
+train.layerwise_metrics = True
+train.info_imbalance = True
+
+train.wandb_params = {
+    "entity": "<anon-entity>",
+    "group": "data_experiments",
+    "name": "E3_7_music",
+    "offline": True,
+    "project": "text-audio",
+    "save_dir": "/projects/<group>/logs/",
+}
