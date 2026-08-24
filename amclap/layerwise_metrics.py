@@ -1,4 +1,4 @@
-"""Layer-wise geometric metrics callback for CLAP-MTG.
+"""Layer-wise geometric metrics callback for AMCLAP.
 
 Computes six geometric metrics over intermediate layer representations:
   - mLID (geometric mean + Fréchet variance)

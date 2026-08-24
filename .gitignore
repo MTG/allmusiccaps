@@ -16,6 +16,7 @@ __pycache__/
 
 # Local notes (may contain cluster paths or credentials)
 CLAUDE.md
+NEXT_STEPS.md
 
 # Logs and checkpoints
 slurm_logs/

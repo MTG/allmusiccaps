@@ -38,6 +38,49 @@ for net_name, net in NETS.items():
     gin.external_configurable(net, net_name)
 
 
+def _load_submodule(parent, key, state_dict, label=None) -> None:
+    """Load one submodule's weights from `state_dict` by key prefix.
+
+    Which submodules exist depends on the config, so an absent one is a normal
+    configuration rather than a failure; only a genuine mismatch is reported.
+    """
+    label = label or key
+    submodule = getattr(parent, key, None)
+    weights = {
+        k[len(key) + 1 :]: v for k, v in state_dict.items() if k.startswith(key + ".")
+    }
+
+    if submodule is None and not weights:
+        # The attention-pooler pair (`proj_att_query`, `att_pooler`) is only
+        # built when `aggregation_type == "attention_pooler"`, so under mean
+        # pooling it is absent from both the model and the checkpoint. Nothing
+        # to load and nothing wrong: stay quiet.
+        return
+
+    # `weights` is non-empty here: the early return above took the other case.
+    if submodule is None:
+        print(
+            f"AMCLAP: skipping `{label}`: the checkpoint has {len(weights)} "
+            "weights for it, but this model does not define it."
+        )
+        return
+
+    if not weights:
+        print(
+            f"AMCLAP: `{label}` got no weights: the checkpoint contains no "
+            f"`{key}.*` keys, so it keeps its initialisation."
+        )
+        return
+
+    try:
+        submodule.load_state_dict(weights, strict=True)
+    except Exception as exc:  # noqa: BLE001 - one bad submodule must not abort the rest
+        print(f"AMCLAP: error loading weights for `{label}`:", exc)
+        return
+
+    print(f"AMCLAP: {len(weights)} weights loaded for `{label}`")
+
+
 def _check_text_encoder_loaded(module, state_dict) -> None:
     """Fail if the checkpoint's fine-tuned text weights were silently ignored.
 
@@ -93,48 +136,23 @@ def def_module(
             try:
                 module.load_state_dict(state_dict, strict=True)
 
-            except RuntimeError as e:
-                print("Error loading the entire state_dict")
-                print("Trying to load specific modules")
+            except RuntimeError:
+                # Expected for the published checkpoints: they store the audio
+                # encoder under `net.*` / `embedding_layer.*`, while the
+                # instantiated model nests it under `audio_encoder.model.*`, so
+                # a strict whole-model load can never match. Fall back to
+                # loading each submodule by prefix.
 
                 for key in ["proj_a", "proj_t", "proj_att_query", "att_pooler"]:
-                    try:
-                        subnet_weigths = {
-                            k[len(key) + 1 :]: v
-                            for k, v in state_dict.items()
-                            if k.startswith(key)
-                        }
-                        getattr(module, key).load_state_dict(
-                            subnet_weigths, strict=True
-                        )
-                        print(
-                            f"CLAP-MTG: {len(subnet_weigths)} weights loaded for `{key}`"
-                        )
-                    except Exception as e:
-                        print(f"Error loading weights for `{key}`:", e)
-                        print(
-                            f"The checkpoint might be missing the `{key}` keys or have unexpected keys for `{key}`."
-                        )
+                    _load_submodule(module, key, state_dict)
 
                 for key in ["net", "embedding_layer"]:
-                    try:
-                        subnet_weigths = {
-                            k[len(key) + 1 :]: v
-                            for k, v in state_dict.items()
-                            if k.startswith(key)
-                        }
-                        getattr(module.audio_encoder.model, key).load_state_dict(
-                            subnet_weigths, strict=True
-                        )
-                        print(
-                            f"CLAP-MTG: {len(subnet_weigths)} weights loaded for audio_encoder.model`{key}`"
-                        )
-                    except Exception as e:
-                        print(
-                            f"CLAP-MTG: Error loading weights for `{key}`:",
-                            e,
-                            ". This is expected if the model uses mean pooling (mp)",
-                        )
+                    _load_submodule(
+                        module.audio_encoder.model,
+                        key,
+                        state_dict,
+                        label=f"audio_encoder.model.{key}",
+                    )
 
                 _check_text_encoder_loaded(module, state_dict)
 

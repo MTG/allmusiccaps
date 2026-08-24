@@ -1,4 +1,4 @@
-"""Score generative-music outputs with CLAP-MTG models.
+"""Score generative-music outputs with AMCLAP models.
 
 For each (prompt, generated_wav, human_MOS) triple in MusicEval, compute
 cosine(forward_text(prompt), forward_audio(wav)). Write per-sample scores plus
