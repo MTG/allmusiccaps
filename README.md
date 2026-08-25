@@ -11,7 +11,7 @@ _Pablo Alonso-Jiménez, Xavier Lizarraga-Seijas, Xavier Serra, Dmitry Bogdanov_
 
 </div>
 
-Music--text contrastive (CLAP) models trained with captions derived from professional album reviews,
+Music-text contrastive (CLAP) models trained with captions derived from professional album reviews,
 plus the **AllMusicCaps** caption dataset.
 
 ## Install
@@ -64,7 +64,7 @@ comparable with cosine similarity.
 
 ## Available models
 
-All models use the OMAR-RQ audio encoder and an `all-mpnet-base-v2` text encoder (*TE*). *Step* is
+All models use the OMAR-RQ audio encoder and an `all-mpnet-base-v2` text encoder (_TE_). _Step_ is
 the checkpoint the paper reports.
 
 | Model | Data | Layers | Objective | TE | Step |
@@ -105,7 +105,7 @@ the checkpoint the paper reports.
 ## The AllMusicCaps dataset
 
 540,454 rows pairing YouTube tracks with captions derived from AllMusic album reviews, in two
-styles: review *quotes* and LLM-filled *structured* attributes. It contains identifiers and
+styles: review _quotes_ and LLM-filled _structured_ attributes. It contains identifiers and
 captions, **no audio**.
 
 ```python
@@ -131,18 +131,18 @@ reproduce it. A 50-row sample lives in [`data/allmusiccaps/_samples/`](data/allm
 pip install -e .[train]
 ```
 
-2. Prepare the data
+1. Prepare the data
 
 Audio is stored downsampled to 24 kHz mono as 16-bit raw bytes
 ([numpy memmap](https://numpy.org/doc/stable/reference/generated/numpy.memmap.html) files); captions
 come from the JSONL above. Check the [preprocessing scripts](scripts/preprocess_am_discotube/).
 
-3. Configuration
+1. Configuration
 
 Experiment configuration is controlled with [gin-config](https://github.com/google/gin-config); see
 [`cfg/README.md`](cfg/README.md). At least the dataset paths need to point at your own data.
 
-4. Run the experiment
+1. Run the experiment
 
 ```bash
 python -m amclap.train cfg/<config>.gin
