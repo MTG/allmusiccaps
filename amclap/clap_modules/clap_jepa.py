@@ -14,10 +14,11 @@ from ..contrastive_losses import DDPSigmoidLoss, InfoNCELoss, MultimodalInfoNCEL
 def _import_lejepa(required: bool = True):
     """Import the optional `lejepa` package, used only to build the SigReg loss.
 
-    `lejepa` has no PyPI release (it installs from git), so it ships in the
-    `[train]` extra rather than as a core dependency. Inference on published
-    weights never needs it: the exported checkpoints carry no SigReg tensors,
-    so the loss is constructed but never evaluated.
+    `lejepa` has no PyPI release, and PyPI rejects direct (git) references in
+    every dependency field, so it cannot ship in an extra either: it has to be
+    installed by hand. Inference on published weights never needs it: the
+    exported checkpoints carry no SigReg tensors, so the loss is constructed
+    but never evaluated.
 
     Returns None when the package is missing and `required` is False, which lets
     a published model load for inference without the training extra installed.
@@ -28,8 +29,9 @@ def _import_lejepa(required: bool = True):
         if not required:
             return None
         raise ImportError(
-            "The SigReg loss requires the optional `lejepa` package. "
-            "Install the training extra with `pip install amclap[train]`."
+            "The SigReg loss requires the optional `lejepa` package, which "
+            "has no PyPI release and must be installed from git:\n"
+            '  pip install "lejepa @ git+https://github.com/rbalestr-lab/lejepa.git"'
         ) from exc
     return lejepa
 

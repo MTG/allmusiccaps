@@ -34,12 +34,13 @@ dependencies = [
 [project.optional-dependencies]
 # Pre-training and fine-tuning.
 #
-# `lejepa` has no PyPI release, so it is declared as a direct git reference.
-# PyPI rejects direct references in *core* dependencies, which is why it lives
-# here: `pip install amclap` works from PyPI, while `pip install amclap[train]`
-# needs git access. Only the SigReg objective touches it.
+# `lejepa` is deliberately absent: it has no PyPI release, and PyPI rejects
+# direct (git) references in *any* dependency field, extras included. Only the
+# SigReg objective touches it, so `amclap[train]` installs without it and that
+# objective raises with an install hint if it is missing:
+#
+#   pip install "lejepa @ git+https://github.com/rbalestr-lab/lejepa.git"
 train = [
-  "lejepa@git+https://github.com/rbalestr-lab/lejepa.git",
   "wandb",
   "pandas",
   # >=3 keeps pip off the 2.x line, whose `pa.PyExtensionType` was removed in

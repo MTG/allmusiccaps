@@ -3,8 +3,8 @@
 Modules are resolved lazily so that `import amclap` does not pull in every
 research variant. That matters for two reasons: the baseline encoders (MERT,
 HTSAT, MAEST) need heavy optional dependencies, and `LeJEPA`/`ClapJepa` import
-the `lejepa` package, which is only available from git and therefore ships as
-the `[train]` extra rather than a core dependency.
+the `lejepa` package, which is only available from git and therefore has to be
+installed by hand rather than through any dependency field.
 
 `MODULES` keeps its original keys and iteration behaviour, because
 `amclap.def_module` iterates it to register every name with

@@ -58,9 +58,13 @@ with torch.no_grad():
 Audio must be mono at 24 kHz. Both towers output 512-dimensional embeddings in a shared space,
 comparable with cosine similarity.
 
-> **Note:** `pip install amclap` is enough for inference on every released model. The `[train]`
-> extra additionally pulls [`lejepa`](https://github.com/rbalestr-lab/lejepa) from git, which is
-> only needed to compute the SigReg objective during training.
+> **Note:** `pip install amclap` is enough for inference on every released model. Training with
+> the SigReg objective additionally needs [`lejepa`](https://github.com/rbalestr-lab/lejepa),
+> which has no PyPI release and so is not part of the `[train]` extra — install it from git:
+>
+> ```bash
+> pip install "lejepa @ git+https://github.com/rbalestr-lab/lejepa.git"
+> ```
 
 ## Available models
 
